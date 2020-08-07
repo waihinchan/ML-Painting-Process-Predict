@@ -71,11 +71,10 @@ class Vgg19(torch.nn.Module):
         out = [h_relu1, h_relu2, h_relu3, h_relu4, h_relu5]
         return out
 
-# wo = Vgg19()
-# print(wo)
-class perceptual_loss(nn.Module):
+
+class pixHDversion_perceptual_loss(nn.Module):
     def __init__(self, gpu_ids):
-        super(VGGLoss, self).__init__()
+        super(pixHDversion_perceptual_loss, self).__init__()
         self.vgg = Vgg19().cuda()
         self.criterion = nn.L1Loss()
         self.weights = [1.0/32, 1.0/16, 1.0/8, 1.0/4, 1.0]
@@ -97,10 +96,10 @@ def gram(input):
     (bs, ch, h, w) = input.size()
     features = input.view(bs * ch, w * h)
     Gram = torch.mm(features,features.t())
-    print(Gram)
+    # print(Gram)
     Gram = Gram.div(bs*ch*h*w)
     return Gram
-print(gram(torch.rand(1,3,1024,1024)))
+
 
 # y=A(x), z=B(y) 求B中参数的梯度，不求A中参数的梯度
 # y = B(A(x))
@@ -108,3 +107,5 @@ print(gram(torch.rand(1,3,1024,1024)))
 # y = A(x)
 # z = B(y.detach())
 # z.backward()
+# wo = Vgg19()
+# print(wo)
