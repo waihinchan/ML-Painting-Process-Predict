@@ -2,6 +2,22 @@ import network
 import torch
 import torch.nn as nn
 
+"""
+this is reference to the pix2pix patchGAN, some details are different.
+didn't use BatchNorm (which use in pix2pixHD)
+use instanceNorm
+didn't use get_Interm_Feat as for temporary didn't need
+
+
+"""
+
+class multiProgressDiscriminator(nn.Module):
+    def __init__(self):
+        super(multiProgressDiscriminator, self).__init__()
+
+
+
+
 class patchGAN(nn.Module):
     def __init__(self,input_channel,K = 64,n_layers = 4):
         super(patchGAN, self).__init__()
@@ -35,7 +51,7 @@ class patchGAN(nn.Module):
 # some test
 
 # input = torch.rand(1,3,1024,1024)
-# ma = patchGAN()
+# ma = patchGAN(3)
 # print(ma(input).shape)
 # print(ma)
 

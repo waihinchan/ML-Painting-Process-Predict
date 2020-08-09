@@ -7,7 +7,13 @@ import matplotlib.pyplot as plt
 import torchvision.transforms as transforms
 import torchvision.models as models
 import copy
-
+"""
+remain to sort:
+1.a Normalization need to be added
+2.effect is not good enough, but can be a part of the loss function
+3.remain to move this part to the Loss page
+4.some problems about the resolution
+"""
 
 def image_loader(image_name):
     image = Image.open(image_name).convert('RGB')
@@ -38,13 +44,8 @@ class ContentLoss(nn.Module):
         return input
     # calculate per pixels difference
 
-def gram(input):
-    (bs, ch, h, w) = input.size()
-    features = input.view(bs * ch, w * h)
-    Gram = torch.mm(features,features.t())
-    # print(Gram)
-    Gram = Gram.div(bs*ch*h*w)
-    return Gram
+from Loss import gram
+
 
 class StyleLoss(nn.Module):
     def __init__(self,target):
@@ -59,7 +60,7 @@ class StyleLoss(nn.Module):
         return input
     # calculate the mse different between the input and target
 
-# not sure this will working
+
 class Normalization(nn.Module):
     def __init__(self,mean,std):
         super(Normalization, self).__init__()
@@ -68,7 +69,7 @@ class Normalization(nn.Module):
     def forward(self,img):
         return (img - self.maen)/self.std
 
-# not sure this will working
+
 
 
 imgsize = 512 if torch.cuda.is_available() else 128
@@ -81,8 +82,8 @@ loader = transforms.Compose([
 # pre-process pipeline
 
 
-style_img = image_loader("./dataset/style_transfer/target_style.png")
-content_img = image_loader("./dataset/style_transfer/input_image.png")
+style_img = image_loader("./dataset/style_transfer/target_style3.jpeg")
+content_img = image_loader("./dataset/style_transfer/input_image2.jpg")
 assert style_img.size() == content_img.size(), \
     "we need to import style and content images of the same size"
 
