@@ -150,7 +150,7 @@ class SCAR(model_wrapper):
             self.l1loss = nn.L1Loss()
             self.vggloss = Loss.pixHDversion_perceptual_loss(opt.gpu_ids)
             self.TVloss = Loss.TVLoss()
-            self.GANloss = Loss.GANLoss()
+            self.GANloss = Loss.GANLoss(device = self.device)
             self.optimizer_G = torch.optim.Adam(list(self.netG.parameters()),lr=1e-4)
             self.optimizer_D = torch.optim.Adam(list(self.netD.parameters()),lr=1e-4)
             print('---------- Networks initialized -------------')
@@ -167,17 +167,18 @@ class SCAR(model_wrapper):
             print('mode error,this would create a empty netG without pretrain params')
 
     def forward(self,input):
-        target_image = input['image']
-        input_image = input['label']
+        target_image = input['image'].to(self.device)
+        input_image = input['label'].to(self.device)
         generated = self.netG(input_image)
 
-        cat_fake = torch.cat((generated,input_image),1)
-        cat_real = torch.cat((target_image,input_image),1)
+        cat_fake = torch.cat((generated.detach(),input_image),1)
 
+        cat_real = torch.cat((target_image.detach(),input_image),1)
+        # not sure the target_image need a detach or not
         dis_real = self.netD(cat_real)
         dis_fake = self.netD(cat_fake)
         loss_real = self.GANloss(dis_real,True)
-        loss_fake = self.GANloss(dis_fake,True)
+        loss_fake = self.GANloss(dis_fake,False)
         dis_loss = loss_real + loss_fake
 
         gan_loss = self.GANloss(generated,True)

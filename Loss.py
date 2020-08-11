@@ -4,8 +4,9 @@ import torch.nn as nn
 # GANloss remain to update
 # pixel loss (use at patch GAN)
 class GANLoss(nn.Module):
-    def __init__(self,lsgan=True):
+    def __init__(self,device,lsgan=True):
         super(GANLoss, self).__init__()
+        self.device = device
         if lsgan:
             self.loss = nn.MSELoss()
         else:
@@ -18,7 +19,7 @@ class GANLoss(nn.Module):
         else:
             target_tensor = torch.zeros(input.shape,requires_grad=False)
 
-        return target_tensor
+        return target_tensor.to(self.device)
 
     def __call__(self, input, label):
 

@@ -33,8 +33,6 @@ def imshow(tensor):
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # use GPU or CPU
 
-
-
 class ContentLoss(nn.Module):
     def __init__(self,target):
         super(ContentLoss, self).__init__()
