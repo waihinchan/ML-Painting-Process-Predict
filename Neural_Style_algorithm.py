@@ -29,6 +29,7 @@ def imshow(tensor):
     plt.figure()
     plt.imshow(image)
     plt.show()
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # use GPU or CPU
 

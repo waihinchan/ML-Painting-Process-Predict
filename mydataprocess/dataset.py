@@ -1,6 +1,7 @@
 import os
 import random
 import numpy as np
+
 import torch.utils.data as data
 from PIL import Image
 import matplotlib.pyplot as plt
@@ -22,24 +23,7 @@ def is_image_file(filename):
 
 
 
-
 def make_dataset(dir):
-    """
-    有如下几种情况
-    由A到B
-    那就是只有input image 和 real image
-    实际上还有一些用到instant和label image的 先不写
-    主要是不知道到底是怎么处理这些图像的
-
-    其次是在我自己的实现方法上会有一个一对多的input
-    所以这个情况下还需要确定有多少个（根据opt的数量来迭代，要求带下标的数字）
-    然后debug一下
-    所以目前有2个情况
-    一个是A和B
-    另外一个是input output1 output2 output3 output4
-    # 同时（out2是out3的input）
-    :return:
-    """
     the_data = []
     # for the path list
     assert os.path.isdir(dir),'%s is not a valid directory' % dir
@@ -52,7 +36,7 @@ def make_dataset(dir):
 
     return the_data
 
-def plotimage(img,interval = 3):
+def plotimage(img,interval = 0.5):
     plt.figure()
     plt.imshow(img)
     plt.show()
@@ -176,6 +160,57 @@ def build_pipe(opt,params,method = Image.BICUBIC, normalize=True):
 
 # **************************data process method**************************
 
+# .dataset/070/001-a 001-b 001-c 002-a 002-b 002-c
+# target
+# 1. make a list
+# 2. list[-1] = target image
+# 3. list[0] = 1step
+# 4. one params = pick one - don't know yet
+# 5. for now only pick 0 -> -1
+
+class dataset_070(data.Dataset):
+    # remain some error handle need to update
+    # remain step params to add (decide how many step would take)
+    def  __init__(self,opt):
+        super(dataset_070, self).__init__()
+        self.opt = opt
+        self.data_root_path = os.path.join(os.getcwd(), "dataset")
+
+        print("the root path is " + self.data_root_path)
+        self.path = os.path.join(self.data_root_path, opt.name)
+        self.dir = sorted(os.listdir(self.path))
+        # this willreturn the full path of each image
+        print("the dataset path is " + self.path)
+
+    def __getitem__(self, index):
+
+        """
+        :param index: index should be NNN 00N 001 002 003 004
+        :return: return a dist of multi inputs
+        """
+        index = str(index)
+        # pass through the
+        real_index =index.rjust(3,'0')
+        # get the format 00N
+        pathlist = sorted([i for i in self.dir if i.startswith(real_index)])
+        # str -> path
+        rawdatalist = [Image.open(os.path.join(self.path,i)) for i in pathlist]
+        # raw PIL image
+
+        params = how_to_deal(self.opt,rawdatalist[-1].size)
+        transforms_pipe = build_pipe(self.opt,params, method=Image.NEAREST, normalize=False)
+        datalist = [i*255.0 for i in map(transforms_pipe,rawdatalist)]
+
+        # this should be tensor
+        # remain to test whether need * 255.0
+
+        return {'step_1':datalist[0],'step_2':datalist[1],'target':datalist[-1]}
+
+    def __len__(self):
+        last = self.dir[-1]
+        return int(last[:3])//self.opt.batchSize * self.opt.batchSize + 1
+        # return int(last[:3])
+
 
 class myDataset(data.Dataset):
     def  __init__(self,opt):
@@ -259,3 +294,10 @@ class myDataset(data.Dataset):
         # don't know why do this
         # let's test
         return len(self.A_paths)
+
+
+#
+# for i in os.listdir('/Users/waihinchan/Documents/mymodel/scar/dataset/070'):
+#     print(i)
+
+# print(sorted(os.listdir('/Users/waihinchan/Documents/mymodel/scar/dataset/070')))

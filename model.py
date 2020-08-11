@@ -186,7 +186,7 @@ class SCAR(model_wrapper):
         vgg_loss = self.vggloss(generated,target_image)*10.0
 
         G_loss = gan_loss+TV_loss+vgg_loss+l1_loss*100
-        return {'total_loss':G_loss,
+        return {'G_loss':G_loss,
                 'l1_loss':l1_loss,
                 'TV_loss':TV_loss,
                 'dis_loss':dis_loss,'dis_real':loss_real,'dis_fake':loss_fake,
