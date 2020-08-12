@@ -36,6 +36,7 @@ def make_dataset(dir):
 
     return the_data
 
+
 def plotimage(img,interval = 0.5):
     plt.figure()
     plt.imshow(img)
@@ -160,13 +161,7 @@ def build_pipe(opt,params,method = Image.BICUBIC, normalize=True):
 
 # **************************data process method**************************
 
-# .dataset/070/001-a 001-b 001-c 002-a 002-b 002-c
-# target
-# 1. make a list
-# 2. list[-1] = target image
-# 3. list[0] = 1step
-# 4. one params = pick one - don't know yet
-# 5. for now only pick 0 -> -1
+
 
 class dataset_070(data.Dataset):
     # remain some error handle need to update

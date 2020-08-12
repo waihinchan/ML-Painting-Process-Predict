@@ -56,6 +56,8 @@ class model_wrapper(nn.Module):
             print('%s not exists !' % save_path)
         else:
             network.load_state_dict(torch.load(save_path))
+            # torch.load(save_path, map_location=lambda storage, loc: storage)
+            # not sure this need or not
             print('%s loading succeed ' % network_label)
             if self.opt.debug:
                 for a in torch.load(save_path).items():
@@ -139,9 +141,9 @@ class SCAR(model_wrapper):
 
             pretrain_path = '' if self.opt.mode == 'train' else self.save_dir
             # load model from the checkpoint
-            # something like ./checkpoint/modename/10s_net_G.pth
-            self.load_network(self.netG, 'G', opt.which_epoch, pretrain_path)
+            # something like ./checkpoint/modename/10_net_G.pth
             self.load_network(self.netD, 'D', opt.which_epoch, pretrain_path)
+            self.load_network(self.netG, 'G', opt.which_epoch, pretrain_path)
 
             # TBD
             # self.loss_filter = self.init_loss_filter(not opt.no_ganFeat_loss, not opt.no_vgg_loss)
@@ -161,7 +163,8 @@ class SCAR(model_wrapper):
             # remain to push the model to cuda if avliable
 
         elif 'test' in self.opt.mode :
-            self.load_network(self.netG, 'G', opt.which_epoch, opt.checkpoint_dir)
+
+            self.load_network(self.netG, 'G', opt.which_epoch, self.save_dir)
 
         else:
             print('mode error,this would create a empty netG without pretrain params')
