@@ -12,17 +12,21 @@ dataloader = mydataloader.Dataloader(myoption)
 
 thedataset = dataloader.load_data()
 
+
+
 print('create a dataset with %s group' % dataloader.__len__())
 
 # data = {'image':torch.rand(1,3,512,512),'label':torch.rand(1,3,512,512)}
-# fake data for test
+
 
 mymodel = model.SCAR()
 mymodel.initialize(myoption)
 tflogpath = './run/' + myoption.name
 myvisualer = visual.Visualizer(tflogpath)
-testpath = visual.get_test_data('scar/dataset/test')
+# testpath = visual.get_test_data('scar/dataset/test')
 epoch = 100
+
+
 
 for i in range(epoch):
     for data in thedataset:

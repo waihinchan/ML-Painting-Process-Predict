@@ -81,8 +81,9 @@ loader = transforms.Compose([
 # pre-process pipeline
 
 
-style_img = image_loader("./dataset/style_transfer/target_style3.jpeg")
-content_img = image_loader("./dataset/style_transfer/input_image2.jpg")
+style_img = image_loader("./dataset/070/011-d.png")
+content_img = image_loader("./dataset/070/018-a.png")
+
 assert style_img.size() == content_img.size(), \
     "we need to import style and content images of the same size"
 
@@ -153,5 +154,5 @@ def run():
 
 # input_img.data.clamp_(0, 1)
 content_img.data.clamp_(0, 1)
-run()
-imshow(content_img)
+# run()
+# imshow(content_img)

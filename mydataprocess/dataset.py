@@ -17,10 +17,8 @@ IMG_EXTENSIONS = [
     '.png', '.PNG', '.ppm', '.PPM', '.bmp', '.BMP', '.tiff'
 ]
 
-
 def is_image_file(filename):
     return any(filename.endswith(extension) for extension in IMG_EXTENSIONS)
-
 
 
 def make_dataset(dir):
@@ -48,65 +46,81 @@ def loadimg(path):
     return Image.open(path).convert('RGB')
 
 
-def how_to_deal(opt,img_size):
 
-    """
-    # not sure can i flip if it would effect the result or improve it
-    # this is for how to deal with the image, by passing the requirement and the image size itself
-    # target -> given a final size, rescale or cut the image to that size, maybe using crop or rescale or resize
-    # the pix2pixHD using the same w and h if the option is resize
-    # i will use rescale instead (don't know why resize mean w and h be the same)
+"""
+思路：
+1.有一个放大的size
+2.有一个最终的inputsize
+3.先找到你的原图多大，同时找到随机裁剪点
+4.然后把原图放大/或缩小到指定尺寸
+5.然后找到随机裁剪点进行裁剪
 
-    :param opt: using opt.input_size , opt.loading_size_w ,  opt.flip
-    :param img_size: img_size is a tuple (from PIL image.size())
-    :return: where a dict to tell where to crop , flip or not
-    """
+问题在于 如果inputsize 不是1:1 就会很麻烦
+o 1024 512
+t 512 512
 
+512/512 = 1024/n
+n = 1024
+oh -> 1024
+
+"""
+
+
+def how_to_process(opt,img_size):
     w,h = img_size
-    loading_w  = opt.loading_size_w
-    loading_h = opt.loading_size_w * h // w
+    input_w  = opt.inputsize if  isinstance(opt.inputsize,int) else opt.inputsize[0]
+    input_h = opt.input_w * h // w if isinstance(opt.inputsize,int) else opt.inputsize[-1]
 
-    # intput_w,input_h = opt.inputsize
-    x = random.randint(0, np.maximum(0, loading_w - opt.inputsize))
-    y = random.randint(0, np.maximum(0, loading_h - opt.inputsize))
-
+    x = random.randint(0, np.maximum(0, w - opt.input_w))
+    y = random.randint(0, np.maximum(0, h - opt.input_h))
     filp = None
     if(opt.flip):
         flip = random.random() > 0.5
-
     return {'crop_pos': (x, y), 'flip': flip}
 
-def __crop(img, pos, size):
+# if one side of the orginal image is less than the inputsize, the crop position would be 0.
+# so in the scale function need the resize the image (especially when one side is less than the input)
+# def howtotest(inputsize,img_size):
+#     w,h = img_size
+#     input_w  = inputsize if  isinstance(inputsize,int) else inputsize[0]
+#
+#     input_h = input_w * h // w if isinstance(inputsize,int) else inputsize[1]
+#
+#     x = random.randint(0, np.maximum(0, w - input_w))
+#     y = random.randint(0, np.maximum(0, h - input_h))
+#     filp = None
+#
+#     flip = random.random() > 0.5
+#     return {'crop_pos': (x, y), 'flip': flip}
+#
+# a = (256,1024)
+# print(howtotest((512,2048),a))
+
+
+def build_pipe(opt):
     """
-    :param img: the PIL IMAGE
-    :param pos: where to cut , pass the "how_to_deal" 's return in it
-    :param size: target size
-    :return: cropped image
+    :param opt: the target size
+    :return: the tensor
     """
-    ow, oh = img.size
-    x1, y1 = pos
-    tw = th = size
-    if (ow > tw or oh > th):
-        return img.crop((x1, y1, x1 + tw, y1 + th))
+    pipes = []
+    if opt.CenterCrop:
+        pipes.append(transforms.CenterCrop(opt.inputsize))
+    else:
+        pipes.append(transforms.RandomCrop(opt.inputsize,pad_if_needed=True,padding_mode='edge'))
+        # make sure if the orginal image less then the input size
+    if opt.flip and 'train' in opt.mode:
+        pipes.append(transforms.RandomHorizontalFlip(p=0.5))
 
-    return img
+    # if opt.resize_or_crop == 'none':
+    #     base = float(2 ** opt.n_downsample_global)
+    # if opt.netG == 'local':
+    #     base *= (2 ** opt.n_local_enhancers)
+    # pipes.append(transforms.Lambda(lambda img: __make_power_2(img, base, method)))
 
-
-def __scale_width(img, target_width, method=Image.BICUBIC):
-    """
-    :param img: the orginal PIL image
-    :param target_width: given by the option opt.loading_size_w
-    :param method: default BICUBIC remain to test
-    :return: the rescaled image
-
-    """
-
-    ow, oh = img.size
-    if (ow == target_width):
-        return img
-    w = target_width
-    h = int(target_width * oh // ow)
-    return img.resize((w, h), method)
+    pipes.append(transforms.ToTensor())
+    pipes.append(transforms.Normalize((0.5, 0.5, 0.5),
+                                          (0.5, 0.5, 0.5)))
+    return transforms.Compose(pipes)
 
 def __make_power_2(img, base, method=Image.BICUBIC):
     ow, oh = img.size
@@ -115,49 +129,7 @@ def __make_power_2(img, base, method=Image.BICUBIC):
     if (h == oh) and (w == ow):
         return img
     return img.resize((w, h), method)
-    # https://datascience.stackexchange.com/questions/20179/what-is-the-advantage-of-keeping-batch-size-a-power-of-2
 
-def __flip(img, flip):
-    if flip:
-        return img.transpose(Image.FLIP_LEFT_RIGHT)
-    return img
-
-
-def build_pipe(opt,params,method = Image.BICUBIC, normalize=True):
-    """
-    crop will pick a random position then crop to the same W and H size
-
-    :param opt:
-    :param params:
-    :param method:
-    :param normalize:
-    :return: the pipe (deal with the img then turn it into tensor)
-    """
-    pipe = []
-    # this is for restore the a series of the operation to the image
-
-    # no resize option here, if the orginal size not match to the target size
-    # using lambada resize, else return the orginal img
-    pipe.append(transforms.Lambda(lambda img: __scale_width(img, opt.loading_size_w, method)))
-    if opt.crop:
-        pipe.append(transforms.Lambda(lambda img: __crop(img, params['crop_pos'], opt.inputsize)))
-
-    else:
-        base = float(2 ** opt.n_downsample_global)
-        # according to the num of the downsample to make the power of 2
-        # can imprve the performance when running at GPU
-        # don't know why should be the num of the n_downsample_global
-        pipe.append(transforms.Lambda(lambda img: __make_power_2(img, base, method)))
-
-    if opt.mode == "train" and opt.flip:
-        pipe.append(transforms.Lambda(lambda img: __flip(img, params['flip'])))
-
-    pipe.append(transforms.ToTensor())
-    if normalize:
-        pipe.append(transforms.Normalize((0.5, 0.5, 0.5),
-                                         (0.5, 0.5, 0.5)))
-
-    return transforms.Compose(pipe)
 
 # **************************data process method**************************
 
@@ -192,8 +164,9 @@ class dataset_070(data.Dataset):
         rawdatalist = [Image.open(os.path.join(self.path,i)) for i in pathlist]
         # raw PIL image
 
-        params = how_to_deal(self.opt,rawdatalist[-1].size)
-        transforms_pipe = build_pipe(self.opt,params, method=Image.NEAREST, normalize=False)
+        # params = how_to_deal(self.opt,rawdatalist[-1].size)
+        # transforms_pipe = build_pipe(self.opt,params, method=Image.NEAREST, normalize=False)
+        transforms_pipe = build_pipe(self.opt)
         datalist = [i*255.0 for i in map(transforms_pipe,rawdatalist)]
 
         # this should be tensor
@@ -207,88 +180,7 @@ class dataset_070(data.Dataset):
         # return int(last[:3])
 
 
-class myDataset(data.Dataset):
-    def  __init__(self,opt):
-        """
-        :param opt:
-        using opt.name as the path
-        when indicate where is the dataset,
-        put it under the the dataset folder and pass the folder name as the param
-        """
 
-        super(myDataset, self).__init__()
-        self.opt = opt
-        # ********************** for the root path ********************** #
-
-        self.data_root_path = os.path.join(os.getcwd(), "dataset")
-        # find the root path
-        print("the root path is " + self.data_root_path)
-        self.path = os.path.join(self.data_root_path, opt.name)
-        print("the dataset path is " + self.path)
-        # join the exact folder
-
-        # ********************** for the root path ********************** #
-
-        # ********************** for the input image ********************** #
-
-        dir_A = '_A' if self.opt.label_nc == 0 else '_label'
-        # this is the input folder and the dataset
-        self.dir_A = os.path.join(self.path, self.opt.mode + dir_A)
-        # opt.mode = opt.phase / provide train or test
-        # the whole path would like rootpath/dataset/yourdatasetname/train_A
-        self.A_paths = sorted(make_dataset(self.dir_A))
-        # this is all the image path inside the dir_A
-
-        # ********************** for the input image ********************** #
-
-        # ********************** for the target image ********************** #
-
-        # so far i only rebuild the input label_image to the real image
-        # so i think i don't need the label channel(maybe)
-        dir_B = '_B' if self.opt.label_nc == 0 else '_img'
-        self.dir_B = os.path.join(self.path, self.opt.mode + dir_B)
-        self.B_paths = sorted(make_dataset(self.dir_B))
-
-        # ********************** for the target image ********************** #
-
-        # not sure how instant and feature map working
-        # TBD
-
-
-    def __getitem__(self, index):
-
-        """
-
-        :param index: which input(the number of the paired input)
-        :return: return a dist of multi inputs
-
-        """
-        # img = Image.open(self.image_file[index])
-
-        A = Image.open(self.A_paths[index])
-        # this is the PIL image format
-        params = how_to_deal(self.opt,A.size)
-        transforms_pipe_A = build_pipe(self.opt,params, method=Image.NEAREST, normalize=False)
-        A_tensor = transforms_pipe_A(A)*255.0
-        # let's say we don't use label channel input
-
-        B = Image.open(self.B_paths[index])
-        transforms_pipe_B = build_pipe(self.opt,params)
-        B_tensor = transforms_pipe_B(B)
-
-        input_dict = {
-            "label": A_tensor,
-            "image": B_tensor
-        }
-
-        return input_dict
-
-    def __len__(self):
-
-        # return len(self.A_paths)//self.opt.batchSize * self.opt.batchSize
-        # don't know why do this
-        # let's test
-        return len(self.A_paths)
 
 
 #

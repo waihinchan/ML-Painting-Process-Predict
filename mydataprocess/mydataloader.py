@@ -3,10 +3,8 @@ import torch.utils.data
 def create_dataset(opt):
     mydataset = None
 
-    from mydataprocess.dataset import myDataset
     from mydataprocess.dataset import dataset_070
 
-# mydataset = myDataset(opt)
     mydataset = dataset_070(opt)
 
     print("dataset [%s] was created" % (opt.name))
