@@ -1,11 +1,6 @@
-import torch
-import torch.nn as nn
-import mydataprocess
-from mydataprocess import dataset, mydataloader
+from mydataprocess import mydataloader
 import option
 import model
-from torchvision import transforms
-import matplotlib.pyplot as plt
 from utils import visual
 
 
