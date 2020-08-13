@@ -21,7 +21,7 @@ print('create a dataset with %s group' % dataloader.__len__())
 mymodel = model.SCAR()
 mymodel.initialize(myoption)
 tflogpath = './run/' + myoption.name
-myvisualer = visual.Visualizer(tflogpath)
+# myvisualer = visual.Visualizer(tflogpath)
 # testpath = visual.get_test_data('scar/dataset/test')
 epoch = 100
 
@@ -29,7 +29,8 @@ epoch = 100
 
 for i in range(epoch):
     for data in thedataset:
-        theinputdata = {'label':data['step_1'],'image':data['target']}
+        theinputdata = data
+        # theinputdata = {'label':data['step_1'],'image':data['target']}
         mymodel.set_requires_grad(mymodel.netD, True)
         loss = mymodel(theinputdata)
         # optmiz D

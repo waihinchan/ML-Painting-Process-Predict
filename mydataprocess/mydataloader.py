@@ -4,9 +4,9 @@ def create_dataset(opt):
     mydataset = None
 
     from mydataprocess.dataset import dataset_070
-
-    mydataset = dataset_070(opt)
-
+    from mydataprocess.dataset import facades
+    # mydataset = dataset_070(opt)
+    mydataset = facades(opt)
     print("dataset [%s] was created" % (opt.name))
 
     # dataset.initialize(opt)

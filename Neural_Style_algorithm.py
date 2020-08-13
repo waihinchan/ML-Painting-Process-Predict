@@ -81,8 +81,8 @@ loader = transforms.Compose([
 # pre-process pipeline
 
 
-style_img = image_loader("./dataset/070/011-d.png")
-content_img = image_loader("./dataset/070/018-a.png")
+style_img = image_loader("./dataset/style_transfer/1.jpg")
+content_img = image_loader("./dataset/style_transfer/4.jpg")
 
 assert style_img.size() == content_img.size(), \
     "we need to import style and content images of the same size"
@@ -121,7 +121,7 @@ target_styles = model(style_img)
 # for i in target_styles:
 #     imshow(i)
 now = [0]
-total = 300
+total = 100
 net = []
 
 for sl in target_styles:
@@ -142,7 +142,7 @@ def run():
                 sl(il)
                 loss+=sl.loss
 
-            loss*=1000000
+            loss*=10
             cl(input_styles[3])
             loss+=cl.loss
             loss.backward()
@@ -154,5 +154,5 @@ def run():
 
 # input_img.data.clamp_(0, 1)
 content_img.data.clamp_(0, 1)
-# run()
-# imshow(content_img)
+run()
+imshow(content_img)

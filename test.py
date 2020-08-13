@@ -37,10 +37,10 @@ def imshow(tensor,interval = 0.5):
     image = tensor.cpu().clone()  # we clone the tensor to not do changes on it
     image = image.squeeze(0)      # remove the fake batch dimension
     image = unloader(image)
-    image.save('/content/scar/result/007.png')
+    image.save('./result/007.png')
 
 
-a = grabdata(myoption,'/content/scar/dataset/test/040-a.png').to('cuda')
+a = grabdata(myoption,'./dataset/070/000-a.png').to(mymodel.device)
 print(a.shape)
 b = mymodel.netG(a)
 imshow(b)

@@ -180,6 +180,34 @@ class dataset_070(data.Dataset):
         # return int(last[:3])
 
 
+class facades(data.Dataset):
+    def __init__(self,opt):
+        super(facades, self).__init__()
+        self.opt = opt
+        self.data_root_path = os.path.join(os.getcwd(), "dataset")
+
+        print("the root path is " + self.data_root_path)
+
+        self.path = os.path.join(self.data_root_path, opt.name)
+        self.path = self.path + '/train'
+        # ./dataset/facades/train
+        self.dir = sorted(os.listdir(self.path))
+        # this willreturn the full path of each image
+        print("the dataset path is " + self.path)
+
+    def __getitem__(self, index):
+        index = str(index+1)
+        rawimage = Image.open(self.path + '/' + index + '.jpg')
+        w,h = rawimage.size
+        pipe = []
+        pipe.append(transforms.ToTensor())
+        transform_pipe = transforms.Compose(pipe)
+        rawtensor = transform_pipe(rawimage)
+        return {'image':rawtensor[:,:,:int(w/2)],'label':rawtensor[:,:,int(w/2):]}
+
+
+    def __len__(self):
+        return len(self.dir) // self.opt.batchSize * self.opt.batchSize
 
 
 

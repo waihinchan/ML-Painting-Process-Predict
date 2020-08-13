@@ -17,7 +17,7 @@ class opt():
         self.input_chan = 3
         self.checkpoint_dir = "./checkpoint"
         # the model root
-        self.name = "070"
+        self.name = "facades"
         # this should be the dataset name and also the model name
         self.batchSize = 1
         self.shuffle = True
