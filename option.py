@@ -7,6 +7,7 @@ class opt():
         self.CenterCrop = True
         self.label = True
         self.flip = True
+        self.lsgan = True
         self.inputsize = 512
         # this is the final input size to the model
         self.crop = False

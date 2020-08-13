@@ -171,7 +171,7 @@ class SCAR(model_wrapper):
             self.l1loss = nn.L1Loss()
             self.vggloss = Loss.pixHDversion_perceptual_loss(opt.gpu_ids)
             self.TVloss = Loss.TVLoss()
-            self.GANloss = Loss.GANLoss(device = self.device)
+            self.GANloss = Loss.GANLoss(device = self.device,lsgan=opt.lsgan)
             self.optimizer_G = torch.optim.Adam(list(self.netG.parameters()),lr=1e-4,betas=(0.9, 0.999))
             self.optimizer_D = torch.optim.Adam(list(self.netD.parameters()),lr=1e-4,betas=(0.9, 0.999))
             print('---------- Networks initialized -------------')
