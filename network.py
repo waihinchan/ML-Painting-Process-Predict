@@ -10,11 +10,13 @@ def create_G(input_channel ,K = 64 ,downsample_num = 6):
     netG.apply(init_weights)
     return netG
 
+
+
 def create_D(input_channel,K = 64,n_layers = 4):
     netD = discriminator.patchGAN(input_channel,K = K,n_layers=n_layers)
     netD.apply(init_weights)
     return netD
-# from torch.autograd import Variable
+
 
 # some tools
 

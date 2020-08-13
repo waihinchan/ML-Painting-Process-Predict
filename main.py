@@ -31,26 +31,33 @@ for i in range(epoch):
     for data in thedataset:
         theinputdata = {'label':data['step_1'],'image':data['target']}
         loss = mymodel(theinputdata)
-        # optmiz G
-        G_loss = loss['G_loss']
-        mymodel.optimizer_G.zero_grad()
-        G_loss.backward(retain_graph=True)
-        mymodel.optimizer_G.step()
+
         # optmiz D
+        mymodel.set_requires_grad(mymodel.netD, True)
         mymodel.optimizer_D.zero_grad()
         loss_D = loss['dis_loss']
         loss_D.backward()
         mymodel.optimizer_D.step()
-        print('done')
+        print('optmiz D')
+        # optmiz G
+        mymodel.set_requires_grad(mymodel.netD, False)
+        # cooldown the params of netD
+        G_loss = loss['G_loss']
+        mymodel.optimizer_G.zero_grad()
+        # G_loss.backward(retain_graph=True)
+        G_loss.backward()
+        mymodel.optimizer_G.step()
+        print('optmiz G')
+
 
     if i%5==0:
-        myvisualer.visulize_loss(loss,i)
-
+        # myvisualer.visulize_loss(loss,i)
+        print(loss)
 
     if i%10==0:
         mymodel.save(i)
-        print('%s_epoch_loss_%s' % (i,G_loss))
-        myvisualer.visulize_loss(loss,i)
+        # print('%s_epoch_loss_%s' % (i,G_loss))
+        # myvisualer.visulize_loss(loss,i)
 
 
 

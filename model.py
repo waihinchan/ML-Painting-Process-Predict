@@ -89,6 +89,22 @@ class model_wrapper(nn.Module):
         # network.load_state_dict(model_dict)
         # remain to update
 
+
+
+    def set_requires_grad(self, nets, requires_grad=False):
+        """Set requies_grad=Fasle for all the networks to avoid unnecessary computations
+        Parameters:
+            nets (network list)   -- a list of networks
+            requires_grad (bool)  -- whether the networks require gradients or not
+        """
+        if not isinstance(nets, list):
+            nets = [nets]
+        for net in nets:
+            if net is not None:
+                for param in net.parameters():
+                    param.requires_grad = requires_grad
+
+
     def update_learning_rate(self):
         pass
 
@@ -106,6 +122,9 @@ eval model
 forward() 
 更新学习率之类的
 """
+
+
+
 class SCAR(model_wrapper):
     def __init__(self):
         super(SCAR, self).__init__()
@@ -153,8 +172,8 @@ class SCAR(model_wrapper):
             self.vggloss = Loss.pixHDversion_perceptual_loss(opt.gpu_ids)
             self.TVloss = Loss.TVLoss()
             self.GANloss = Loss.GANLoss(device = self.device)
-            self.optimizer_G = torch.optim.Adam(list(self.netG.parameters()),lr=1e-4)
-            self.optimizer_D = torch.optim.Adam(list(self.netD.parameters()),lr=1e-4)
+            self.optimizer_G = torch.optim.Adam(list(self.netG.parameters()),lr=1e-4,betas=(0.9, 0.999))
+            self.optimizer_D = torch.optim.Adam(list(self.netD.parameters()),lr=1e-4,betas=(0.9, 0.999))
             print('---------- Networks initialized -------------')
             print('---------- NET G -------------')
             print(self.netG)
@@ -174,23 +193,33 @@ class SCAR(model_wrapper):
         input_image = input['label'].to(self.device)
         generated = self.netG(input_image)
 
-        cat_fake = torch.cat((generated.detach(),input_image),1)
+        cat_fake = torch.cat((generated,input_image),1)
+        # detach so that when D update not effect G
+        # or cat_fake.detach()
+        # fakeimage and input_image
+        cat_real = torch.cat((target_image,input_image),1)
+        # targetimage and input_image
 
-        cat_real = torch.cat((target_image.detach(),input_image),1)
-        # not sure the target_image need a detach or not
         dis_real = self.netD(cat_real)
-        dis_fake = self.netD(cat_fake)
+        dis_fake = self.netD(cat_fake.detach())
+        # get the patch
         loss_real = self.GANloss(dis_real,True)
         loss_fake = self.GANloss(dis_fake,False)
-        dis_loss = loss_real + loss_fake
+        # get the patchGAN loss
+        dis_loss = (loss_real + loss_fake) * 0.5
 
-        gan_loss = self.GANloss(generated,True)
-        l1_loss = self.l1loss(target_image,generated)
+        gan_loss = self.GANloss(cat_fake,True)
+        # fake to the Dis so that optimize our G to generated more natural image
+        l1_loss = self.l1loss(target_image,generated) * 100.0
+        # the main loss(content loss)
         TV_loss = self.TVloss(generated)
-        vgg_loss = self.vggloss(generated,target_image)*10.0
+        # regularize the noise
+        vgg_loss = self.vggloss(generated,target_image)
+        # style loss
 
-        G_loss = gan_loss+TV_loss+vgg_loss+l1_loss*100
+        G_loss = gan_loss + TV_loss + vgg_loss + l1_loss
         return {'G_loss':G_loss,
+                'G_ganloss':gan_loss,
                 'l1_loss':l1_loss,
                 'TV_loss':TV_loss,
                 'dis_loss':dis_loss,'dis_real':loss_real,'dis_fake':loss_fake,
