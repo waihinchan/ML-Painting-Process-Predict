@@ -2,8 +2,18 @@ import torch
 from mydataprocess import dataset
 import torch.nn as nn
 import numpy as np
+import generator
+import discriminator
 
+def create_G(input_channel ,K = 64 ,downsample_num = 6):
+    netG = generator.pix2pix_generator(input_channel,K = K, downsample_num = downsample_num,)
+    netG.apply(init_weights)
+    return netG
 
+def create_D(input_channel,K = 64,n_layers = 4):
+    netD = discriminator.patchGAN(input_channel,K = K,n_layers=n_layers)
+    netD.apply(init_weights)
+    return netD
 # from torch.autograd import Variable
 
 # some tools

@@ -27,7 +27,6 @@ myvisualer = visual.Visualizer(tflogpath)
 epoch = 100
 
 
-
 for i in range(epoch):
     for data in thedataset:
         theinputdata = {'label':data['step_1'],'image':data['target']}
@@ -42,7 +41,7 @@ for i in range(epoch):
         loss_D = loss['dis_loss']
         loss_D.backward()
         mymodel.optimizer_D.step()
-        print(loss)
+        print('done')
 
     if i%5==0:
         myvisualer.visulize_loss(loss,i)
@@ -55,4 +54,4 @@ for i in range(epoch):
 
 
 
-#
+

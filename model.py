@@ -2,8 +2,7 @@ import torch.nn as nn
 import torch
 import os
 import sys
-import generator
-import discriminator
+import network
 import Loss
 
 class model_wrapper(nn.Module):
@@ -123,7 +122,7 @@ class SCAR(model_wrapper):
 
     def initialize(self,opt):
         model_wrapper.initialize(self,opt)
-        self.netG = generator.pix2pix_generator(opt.input_chan).to(self.device)
+        self.netG = network.create_G(opt.input_chan).to(self.device)
         # input_channel ,K = 64 ,downsample_num = 6
         # dpwmsample_num can be add in opt.downsample_num
         if 'train' in self.opt.mode :
@@ -134,7 +133,8 @@ class SCAR(model_wrapper):
             # load pre train mean do noting , just load the D and G with params
 
             # in train mode no matter how we need a D except we are in test/eval mode
-            self.netD = discriminator.patchGAN(opt.input_chan*2).to(self.device)
+
+            self.netD = network.create_D(opt.input_chan*2).to(self.device)
             # cat the input and target into patchGAN
             # so far we only have 3 channel
             # input_channel,K = 64,n_layers = 4
