@@ -14,10 +14,11 @@ class GANLoss(nn.Module):
 
     def transofrm_tensor(self,input,label):
         if label:
-            target_tensor = torch.ones(input.shape,requires_grad=False)
+            target_tensor = torch.ones(input.shape)
+
 
         else:
-            target_tensor = torch.zeros(input.shape,requires_grad=False)
+            target_tensor = torch.zeros(input.shape)
 
         return target_tensor.to(self.device)
 
@@ -33,6 +34,7 @@ class GANLoss(nn.Module):
         else:
             target_tensor = self.transofrm_tensor(input[-1], label)
             return self.loss(input[-1], target_tensor)
+
 
 # remain to update
 

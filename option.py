@@ -19,7 +19,7 @@ class opt():
         # the model root
         self.name = "070"
         # this should be the dataset name and also the model name
-        self.batchSize = 3
+        self.batchSize = 1
         self.shuffle = True
         self.Nthreads = 4 * cpu_num
         self.gpu_ids = torch.cuda.device_count()

@@ -167,7 +167,7 @@ class dataset_070(data.Dataset):
         # params = how_to_deal(self.opt,rawdatalist[-1].size)
         # transforms_pipe = build_pipe(self.opt,params, method=Image.NEAREST, normalize=False)
         transforms_pipe = build_pipe(self.opt)
-        datalist = [i*255.0 for i in map(transforms_pipe,rawdatalist)]
+        datalist = [i for i in map(transforms_pipe,rawdatalist)]
 
         # this should be tensor
         # remain to test whether need * 255.0
