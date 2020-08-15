@@ -4,6 +4,7 @@ import os
 import sys
 import network
 import Loss
+import platform
 
 class model_wrapper(nn.Module):
     def __init__(self):
@@ -31,15 +32,25 @@ class model_wrapper(nn.Module):
         return {}
 
     def save_network(self,network, network_label, epoch_label, gpu_ids):
+
+
+
         if not os.path.isdir(self.save_dir):
             os.mkdir(self.save_dir)
         save_filename = '%s_net_%s.pth' % (epoch_label,network_label)
         # should save at ./checkpoint/self.name/
         save_path = os.path.join(self.save_dir,save_filename)
-        #this should be ./checkpoint/self.name/netG/netD
-        # remain to adjust (the path)
-        torch.save(network.cpu().state_dict(), save_path)
 
+        #this should be ./checkpoint/self.name/netG/netD
+        torch.save(network.cpu().state_dict(), save_path)
+        # save this to the
+
+        # not sure this would working
+        if platform.system() == 'Linux':
+            drive_root = os.path.join('/content/drive/My Drive', self.opt.name)
+            drive_path = os.path.join(drive_root, save_filename)
+            torch.save(network.cpu().state_dict(), drive_path)
+        # not sure this would working
         if gpu_ids>0 and torch.cuda.is_available():
             # move it back to GPU
             network.cuda()
@@ -238,6 +249,7 @@ class SCAR(model_wrapper):
         for param_group in self.optimizer_G.param_groups:
             param_group['lr'] = lr
 
+        print('the current decay(not include the fixed rate epoch)_%s loss is %s'%(epoch,lr))
 
 # 思路：
 # 固定学习率 + 衰减学习率

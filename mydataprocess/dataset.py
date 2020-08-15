@@ -180,11 +180,11 @@ class dataset_070(data.Dataset):
         # return int(last[:3])
 
 
-class facades(data.Dataset):
+class commondataset(data.Dataset):
     # this is for the images which are combine together, and in train test eval etc folder
     # but still some details reamin to update
     def __init__(self,opt):
-        super(facades, self).__init__()
+        super(commondataset, self).__init__()
         self.opt = opt
         self.data_root_path = os.path.join(os.getcwd(), "dataset")
 
@@ -192,16 +192,15 @@ class facades(data.Dataset):
 
         self.path = os.path.join(self.data_root_path, opt.name)
         self.path = self.path + '/train'
-        # ./dataset/facades/train
-        self.dir = [i for i in os.listdir(self.path) if i.endswith('.jpg') ]
-        # need update here
+        # ./dataset/datasetname/train
+        self.dir = sorted([i for i in os.listdir(self.path) if is_image_file(i)])
+
 
         # this willreturn the full path of each image
         print("the dataset path is " + self.path)
 
     def __getitem__(self, index):
-        index = str(index+1)
-        rawimage = Image.open(self.path + '/' + index + '.jpg')
+        rawimage = Image.open(os.path.join(self.path , self[index]))
         w,h = rawimage.size
         pipe = []
         pipe.append(transforms.ToTensor())
@@ -215,8 +214,3 @@ class facades(data.Dataset):
 
 
 
-#
-# for i in os.listdir('/Users/waihinchan/Documents/mymodel/scar/dataset/070'):
-#     print(i)
-
-# print(sorted(os.listdir('/Users/waihinchan/Documents/mymodel/scar/dataset/070')))
