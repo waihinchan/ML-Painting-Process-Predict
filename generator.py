@@ -99,20 +99,17 @@ class pix2pix_generator(nn.Module):
     def forward(self,input):
         skips = []
         x = input
-        print('input_size')
-        print(x.shape)
+
         for down in self.downstack:
             # pass x to each downsampling , then push it in to skips
-            print('downsize')
-            print(x.shape)
+
             x = down(x)
             skips.append(x)
 
         skips = reversed(skips[:-1])
         # reversed the skips, which mean the first one goes to the last one
         for up,skip in zip(self.upstack,skips):
-            print('upsize')
-            print(x.shape)
+
             x = up(x)
             x = torch.cat((x,skip),1)
 

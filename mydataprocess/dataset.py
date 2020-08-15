@@ -200,7 +200,7 @@ class commondataset(data.Dataset):
         print("the dataset path is " + self.path)
 
     def __getitem__(self, index):
-        rawimage = Image.open(os.path.join(self.path , self[index]))
+        rawimage = Image.open(os.path.join(self.path , self.dir[index]))
         w,h = rawimage.size
         pipe = []
         pipe.append(transforms.ToTensor())
