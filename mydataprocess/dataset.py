@@ -181,6 +181,8 @@ class dataset_070(data.Dataset):
 
 
 class facades(data.Dataset):
+    # this is for the images which are combine together, and in train test eval etc folder
+    # but still some details reamin to update
     def __init__(self,opt):
         super(facades, self).__init__()
         self.opt = opt
@@ -191,7 +193,9 @@ class facades(data.Dataset):
         self.path = os.path.join(self.data_root_path, opt.name)
         self.path = self.path + '/train'
         # ./dataset/facades/train
-        self.dir = sorted(os.listdir(self.path))
+        self.dir = [i for i in os.listdir(self.path) if i.endswith('.jpg') ]
+        # need update here
+
         # this willreturn the full path of each image
         print("the dataset path is " + self.path)
 

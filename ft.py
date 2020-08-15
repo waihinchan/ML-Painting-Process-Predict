@@ -1,15 +1,18 @@
 import torch
+import option
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 from Loss import gram
-class ft(nn.Module):
-    def __init__(self):
-        super(ft, self).__init__()
-        self.model = []
-        model+=[]
-    def forward(self,input):
-        return self.net(input)
+import time
+from utils import visual
+# class ft(nn.Module):
+#     def __init__(self):
+#         super(ft, self).__init__()
+#         self.model = []
+#         model+=[]
+#     def forward(self,input):
+#         return self.net(input)
 
 
 # me = ft()
@@ -23,18 +26,29 @@ class ft(nn.Module):
 
 # x = torch.tensor(1.0, requires_grad=True)
 # y = torch.tensor(2.0, requires_grad=True)
-x = torch.rand(1,2,3,4)
-y = torch.rand(1,2,3,4).requires_grad_()
-optimizer = optim.LBFGS([y])
+# x = torch.rand(1,2,3,4)
+# y = torch.rand(1,2,3,4).requires_grad_()
+# optimizer = optim.LBFGS([y])
+#
+# now = [0]
+# total = 200
+# while now[0] < total:
+#     def closure():
+#         optimizer.zero_grad()
+#         z = F.mse_loss(gram(x),gram(y))*100
+#         z.backward()
+#         now[0] += 1
+#         print(y)
+#         return z
+#     optimizer.step(closure)
 
-now = [0]
-total = 200
-while now[0] < total:
-    def closure():
-        optimizer.zero_grad()
-        z = F.mse_loss(gram(x),gram(y))*100
-        z.backward()
-        now[0] += 1
-        print(y)
-        return z
-    optimizer.step(closure)
+# myoption = option.opt()
+# for name,value in vars(myoption).items():
+#     print('%s=%s'%(name,value))
+#
+# tflogpath = './run/' + myoption.name
+# myvisualer = visual.Visualizer(tflogpath)
+# for i in range(200):
+#     time.sleep(1)
+#     print('1')
+#     myvisualer.writer.add_scalar('testloss',2*i,i)

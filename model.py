@@ -106,8 +106,8 @@ class model_wrapper(nn.Module):
 
 
     def update_learning_rate(self):
-        pass
 
+        pass
 """
 load data
 pre-process data
@@ -172,8 +172,8 @@ class SCAR(model_wrapper):
             self.vggloss = Loss.pixHDversion_perceptual_loss(opt.gpu_ids)
             self.TVloss = Loss.TVLoss()
             self.GANloss = Loss.GANLoss(device = self.device,lsgan=opt.lsgan)
-            self.optimizer_G = torch.optim.Adam(list(self.netG.parameters()),lr=1e-4,betas=(0.9, 0.999))
-            self.optimizer_D = torch.optim.Adam(list(self.netD.parameters()),lr=1e-4,betas=(0.9, 0.999))
+            self.optimizer_G = torch.optim.Adam(list(self.netG.parameters()),lr=opt.learningrate,betas=(0.9, 0.999))
+            self.optimizer_D = torch.optim.Adam(list(self.netD.parameters()),lr=opt.learningrate,betas=(0.9, 0.999))
             print('---------- Networks initialized -------------')
             print('---------- NET G -------------')
             print(self.netG)
@@ -230,4 +230,21 @@ class SCAR(model_wrapper):
         self.save_network(self.netD, 'D', which_epoch, self.opt.gpu_ids)
 
 
+    def update_learning_rate(self,epoch):
+        # eporch should pass a value like current_epoch - start_epoch
+        lr = self.opt.learningrate * (0.1 ** (epoch // 30))
+        for param_group in self.optimizer_D.param_groups:
+         param_group['lr'] = lr
+        for param_group in self.optimizer_G.param_groups:
+            param_group['lr'] = lr
 
+
+# 思路：
+# 固定学习率 + 衰减学习率
+# 100 + 100
+# 前100固定
+# 后100 每30代衰减0.1(类似)
+# 当epoch >= 100
+# start update_learning_rate
+# 然后此时传递epochj进去即可
+# 130 - 100 = 30

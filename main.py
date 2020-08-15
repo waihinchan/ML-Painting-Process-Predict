@@ -21,22 +21,23 @@ print('create a dataset with %s group' % dataloader.__len__())
 mymodel = model.SCAR()
 mymodel.initialize(myoption)
 tflogpath = './run/' + myoption.name
-# myvisualer = visual.Visualizer(tflogpath)
-# testpath = visual.get_test_data('scar/dataset/test')
-epoch = 100
+myvisualer = visual.Visualizer(tflogpath)
+testpath = visual.get_test_data('scar/dataset/test')
 
 
 
-for i in range(epoch):
-    for data in thedataset:
+for i in range(mymodel.opt.epoch):
+    loss_item = {'G_loss':0,'D_loss':0}
+    for iter, data in enumerate(thedataset):
         theinputdata = data
         # theinputdata = {'label':data['step_1'],'image':data['target']}
         mymodel.set_requires_grad(mymodel.netD, True)
         loss = mymodel(theinputdata)
-        # optmiz D
 
+        # optmiz D
         mymodel.optimizer_D.zero_grad()
         loss_D = loss['dis_loss']
+        loss_item['D_loss'] += loss_D
         loss_D.backward()
         mymodel.optimizer_D.step()
 
@@ -44,21 +45,37 @@ for i in range(epoch):
         mymodel.set_requires_grad(mymodel.netD, False)
 
         G_loss = loss['G_loss']
+        loss_item['G_loss'] += G_loss
         mymodel.optimizer_G.zero_grad()
         # G_loss.backward(retain_graph=True)
         G_loss.backward()
         mymodel.optimizer_G.step()
 
+        # need test
+        if iter % 50 == 0:
+            loss_item['D_loss'] = loss_item['D_loss'] / 50
+            loss_item['G_loss'] = loss_item['G_loss'] / 50
+            myvisualer.writer.add_scalar('G_loss',loss_item['G_loss'],iter)
+            myvisualer.writer.add_scalar('D_loss',loss_item['D_loss'],iter)
+            loss_item['G_loss'] = 0
+            loss_item['D_loss'] = 0
+        # need test
+    if i >= mymodel.opt.niter_decay:
+        # if epoch less than the opt.niter_decay, this won't happen
+        # 0.1**(current_epoch - decay_epoch // 30)
+        # (i)160 - 100 = 60. 60 // 30 = 2 0.1 **2 = 0.01 , decay 10% every 30 epoch
+        updateepoch = i - mymodel.opt.niter_decay
+        mymodel.update_learning_rate(updateepoch)
+        # this can be update for more elegant
 
 
     if i%5==0:
-        # myvisualer.visulize_loss(loss,i)
-        print(loss)
+        print('%s loss is %s' % (i,loss))
 
-    if i%10==0:
+    if i%9==0:
         mymodel.save(i)
-        # print('%s_epoch_loss_%s' % (i,G_loss))
-        # myvisualer.visulize_loss(loss,i)
+        print('%s_epoch_loss_%s' % (i,loss))
+        myvisualer.visulize_loss(loss=loss,wrt='epoch',epoch=i)
 
 
 

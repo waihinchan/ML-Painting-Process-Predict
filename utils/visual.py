@@ -39,9 +39,9 @@ class Visualizer():
         """
         loss_dict = {'name1':loss1,'name2':loss2...}
         """
-    def visulize_loss(self,loss_dict,epoch):
+    def visulize_loss(self,loss_dict,wrt,epoch):
         for name in loss_dict.keys():
-            self.writer.add_scalar(name,loss_dict[name],epoch)
+            self.writer.add_scalar(name+wrt,loss_dict[name],epoch)
 
 
 
