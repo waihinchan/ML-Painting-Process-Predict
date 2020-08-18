@@ -14,4 +14,4 @@ so far there only a pretrain model target at decoloring from manga. Further upda
 
 pretrain model:
 
-[63_net_G.pth](https://drive.google.com/file/d/1-t4g_xAGyUJ0GkIxWEi8bOoYzKQQZvqU/view?usp=sharing)
+[63_net_G.pth](https://drive.google.com/file/d/1-Y33Kh_-MfOozs5HxcDLKkcWUAC2XXCd/view?usp=sharing)
