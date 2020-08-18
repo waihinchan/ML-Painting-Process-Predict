@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 
 
 myoption = option.opt()
-myoption.which_epoch = '60'
+myoption.which_epoch = '63'
 myoption.mode = 'test'
 for name,value in vars(myoption).items():
     print('%s=%s'%(name,value))
@@ -45,7 +45,7 @@ def imshow(tensor,interval = 0.5):
     image.save('./result/result.png')
 
 
-a = grabdata(myoption,'./dataset/test/haha.jpg').to(mymodel.device)
+a = grabdata(myoption,'./dataset/color/test/0.png').to(mymodel.device)
 # print(a.shape)
 # print(torch.cat((a,a),1).shape)
 b = mymodel.netG(a)
