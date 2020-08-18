@@ -12,7 +12,7 @@ class model_wrapper(nn.Module):
 
     def initialize(self,opt):
         self.opt = opt
-        self.save_dir = os.path.join(opt.checkpoint_dir,opt.name)
+        self.save_dir = os.path.join(opt.checkpoint_dir,opt.name) if opt.load_from_drive == False else '/content/drive/My Drive'+opt.name
 
 
     def forward(self):
@@ -33,8 +33,6 @@ class model_wrapper(nn.Module):
 
     def save_network(self,network, network_label, epoch_label, gpu_ids):
 
-
-
         if not os.path.isdir(self.save_dir):
             os.mkdir(self.save_dir)
         save_filename = '%s_net_%s.pth' % (epoch_label,network_label)
@@ -45,13 +43,15 @@ class model_wrapper(nn.Module):
         torch.save(network.cpu().state_dict(), save_path)
         # save this to the
 
-        # not sure this would working
+
         if platform.system() == 'Linux':
             drive_root = os.path.join('/content/drive/My Drive', self.opt.name)
+            if not os.path.exists(drive_root):
+                os.makedirs(drive_root)
             drive_path = os.path.join(drive_root, save_filename)
             torch.save(network.cpu().state_dict(), drive_path)
-        # not sure this would working
-        if gpu_ids>0 and torch.cuda.is_available():
+
+        if gpu_ids > 0 and torch.cuda.is_available():
             # move it back to GPU
             network.cuda()
 
@@ -193,7 +193,6 @@ class SCAR(model_wrapper):
             # remain to push the model to cuda if avliable
 
         elif 'test' in self.opt.mode :
-
             self.load_network(self.netG, 'G', opt.which_epoch, self.save_dir)
 
         else:

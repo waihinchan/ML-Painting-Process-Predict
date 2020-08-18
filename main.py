@@ -6,7 +6,7 @@ import os
 import time
 myoption = option.opt()
 for name,value in vars(myoption).items():
-    print('%s=%s'%(name,value))
+    print('%s=%s' % (name,value))
 
 dataloader = mydataloader.Dataloader(myoption)
 
@@ -20,22 +20,24 @@ print('create a dataset with %s group' % dataloader.__len__())
 mymodel = model.SCAR()
 mymodel.initialize(myoption)
 
-tflogpath = './run/' + myoption.name
-for i in os.listdir(tflogpath):
-    os.remove(os.path.join(tflogpath,i))
 
-print('tflog been clean!')
+tflogpath = './run/' + myoption.name
+if os.path.isdir(tflogpath):
+    for i in os.listdir(tflogpath):
+        os.remove(os.path.join(tflogpath,i))
+
+    print('tflog been clean!')
 
 myvisualer = visual.Visualizer(tflogpath)
-# testpath = visual.get_test_data('scar/dataset/test')
+testpath = os.path.join(os.path.join(os.getcwd(), 'dataset'), myoption.name) + '/test'
 
 loss_item = {'G_loss':0,'D_loss':0}
 
-for i in range(mymodel.opt.epoch):
+for i in range(1,mymodel.opt.epoch):
 
     epoch_start_time = time.time()
 
-    for j, data in enumerate(thedataset):
+    for j, data in enumerate(thedataset,start=j):
         theinputdata = data
         # theinputdata = {'label':data['step_1'],'image':data['target']}
         mymodel.set_requires_grad(mymodel.netD, True)
@@ -48,7 +50,9 @@ for i in range(mymodel.opt.epoch):
         loss_D.backward()
         mymodel.optimizer_D.step()
 
-        # optmiz G
+        # before optmiz G, cool down the params of D
+        # this part reamain to further update to
+        # separate the learning rate and params of each part of the models
         mymodel.set_requires_grad(mymodel.netD, False)
 
         G_loss = loss['G_loss']
@@ -58,16 +62,11 @@ for i in range(mymodel.opt.epoch):
         G_loss.backward()
         mymodel.optimizer_G.step()
 
-
-        if j % 49 == 0:
-            print('iter %s_Gloss is %s'%(j,G_loss))
-            print('iter %s_Dloss is %s'%(j,loss_D))
-            print('the last 50 iter Dloss is %s'%(loss_item['D_loss']))
-            print('the last 50 iter Gloss is %s'%(loss_item['G_loss']))
-            loss_item['D_loss'] = loss_item['D_loss'] / 50
-            loss_item['G_loss'] = loss_item['G_loss'] / 50
-            myvisualer.writer.add_scalar('G_loss',loss_item['G_loss'],j)
-            myvisualer.writer.add_scalar('D_loss',loss_item['D_loss'],j)
+        if j % 100 == 0:
+            print('the last average 50 iter Dloss is %s'%(loss_item['D_loss']))
+            print('the last average 50 iter Gloss is %s'%(loss_item['G_loss']))
+            loss_item['D_loss'] = loss_item['D_loss'] / 100
+            loss_item['G_loss'] = loss_item['G_loss'] / 100
             loss_item['G_loss'] = 0
             loss_item['D_loss'] = 0
 
@@ -83,14 +82,17 @@ for i in range(mymodel.opt.epoch):
         mymodel.update_learning_rate(updateepoch)
         # this can be update for more elegant
 
-
-    if i%5==0:
+    myvisualer.visulize_loss(epoch=i ,loss_dict=loss)
+    # not sure why some loss not show
+    if i % 5 == 0:
         print('epoch%s loss is %s' % (i,loss))
 
-    if i%9==0:
+    if i % 10==0:
+        print('%s_epoch_loss' % i)
         mymodel.save(i)
-        print('%s_epoch_loss_%s' % (i,loss))
-        myvisualer.visulize_loss(wrt='epoch',epoch=i,loss_dict=loss)
+        # not sure this working , remain to test
+        myvisualer.get_result(path=testpath,epoch=i,netG = mymodel.netG)
+        # not sure this working , remain to test
 
 
 

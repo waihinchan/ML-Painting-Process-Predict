@@ -19,6 +19,7 @@ class opt():
         self.label_nc = 0
         self.input_chan = 3
         self.checkpoint_dir = "./checkpoint"
+        self.load_from_drive = True
         # the model root
         self.name = "color"
         # this should be the dataset name and also the model name
