@@ -30,7 +30,7 @@ def save_result(epoch,tensor,name,path = './result'):
     image = tensor.cpu().clone()  # we clone the tensor to not do changes on it
     image = image.squeeze(0)      # remove the fake batch dimension
     image = unloader(image)
-    name = '%s_%s.png' % (name,epoch)
+    name = '%sepoch_%s' % (epoch,name)
     image.save(os.path.join(path, name))
 
 class Visualizer():
@@ -49,13 +49,17 @@ class Visualizer():
         pipe = []
         pipe.append(transforms.ToTensor())
         transform_pipe = transforms.Compose(pipe)
+        resultfolder = path + '/epoch' + str(epoch)
+        print(resultfolder)
+        os.makedirs(resultfolder)
         print('saving result of %s_epoch, total %s image' % (epoch,len(testimages)))
         for testimage in testimages:
-            w,h = testimage.size
-            rawtensor = transform_pipe(Image.open(testimage))[:,:,:int(w/2)]
-            result = netG(rawtensor)
+            rawimage = Image.open(testimage)
+            w,h = rawimage.size
+            rawtensor = transform_pipe(rawimage)[:,:,:int(w/2)].unsqueeze(0)
+            result = netG(rawtensor.to("cuda" if torch.cuda.is_available() else "cpu"))
             pathlist = testimage.split('/',-1)
-            save_result(epoch=epoch,tensor=result,name=pathlist[-1],path=pathlist[-2])
+            save_result(epoch=epoch,tensor=result,name=pathlist[-1],path=resultfolder)
         print('Done')
 
 

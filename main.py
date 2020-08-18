@@ -37,7 +37,7 @@ for i in range(1,mymodel.opt.epoch):
 
     epoch_start_time = time.time()
 
-    for j, data in enumerate(thedataset,start=j):
+    for j, data in enumerate(thedataset,start=1):
         theinputdata = data
         # theinputdata = {'label':data['step_1'],'image':data['target']}
         mymodel.set_requires_grad(mymodel.netD, True)
@@ -63,8 +63,8 @@ for i in range(1,mymodel.opt.epoch):
         mymodel.optimizer_G.step()
 
         if j % 100 == 0:
-            print('the last average 50 iter Dloss is %s'%(loss_item['D_loss']))
-            print('the last average 50 iter Gloss is %s'%(loss_item['G_loss']))
+            print('the last average 100 iter Dloss is %s'%(loss_item['D_loss']))
+            print('the last average 100 iter Gloss is %s'%(loss_item['G_loss']))
             loss_item['D_loss'] = loss_item['D_loss'] / 100
             loss_item['G_loss'] = loss_item['G_loss'] / 100
             loss_item['G_loss'] = 0

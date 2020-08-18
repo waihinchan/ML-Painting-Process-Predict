@@ -12,7 +12,7 @@ class model_wrapper(nn.Module):
 
     def initialize(self,opt):
         self.opt = opt
-        self.save_dir = os.path.join(opt.checkpoint_dir,opt.name) if not opt.load_from_drive else '/content/drive/My Drive'+opt.name
+        self.save_dir = os.path.join(opt.checkpoint_dir,opt.name) if not opt.load_from_drive else '/content/drive/My Drive/'+opt.name
 
 
     def forward(self):
