@@ -8,9 +8,9 @@ so far there only a pretrain model target at decoloring from manga. Further upda
 
 ****usage****:
 
-1.put into ./checkpoint/color
-2.run test.py
-3.check the result at ./result
+1. put into ./checkpoint/color
+2. run test.py
+3. check the result at ./result
 
 pretrain model:
 
