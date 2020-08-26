@@ -1,5 +1,7 @@
 import network
 import torch.nn as nn
+import torch.nn.utils.spectral_norm as spectral_norm
+import torch.functional as F
 def ResK(dim, padding_type, norm_layer, activation=nn.ReLU(True), use_dropout=True):
     """
     :param dim: INPUT = OUTPUT
@@ -53,4 +55,29 @@ class ResnetBlock(nn.Module):
         the_output = x + self.conv_block(x)
         return the_output
         # https://www.cnblogs.com/wuliytTaotao/p/9560205.html
+
+class SpadeResBlock(nn.Module):
+    def __init__(self, ni, nf,opt):
+        super(SpadeResBlock, self).__init__()
+        self.spade_bn0 = network.SpadeBN(ni)
+        self.conv0 = nn.Conv2d(ni, nf, kernel_size=3, padding=1)
+        self.spade_bn1 = network.SpadeBN(nf)
+        self.conv1 = nn.Conv2d(nf, nf, kernel_size=3, padding=1)
+        self.spade_skip = network.SpadeBN(ni)
+        self.conv_skip = nn.Conv2d(ni, nf, kernel_size=3, padding=1)
+        if opt.use_spectral:
+            self.conv0 = spectral_norm(self.conv0)
+            self.conv1 = spectral_norm(self.conv1)
+            self.conv_skip = spectral_norm(self.conv_skip)
+
+    def forward(self, input, segmap):
+        # skip seq = spade -> relu -> conv
+        skip_features = self.conv_skip(F.relu(self.spade_skip(input, segmap)))
+        # spade0 -> relu -> conv0 -> spade1 -> relu -> conv1
+        features = self.conv0(F.relu(self.spade_bn0(input, segmap)))
+        features = self.conv1(F.relu(self.spade_bn1(features, segmap)))
+        return skip_features + features
+
+
+
 

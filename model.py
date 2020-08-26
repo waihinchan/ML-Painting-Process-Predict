@@ -9,7 +9,7 @@ import platform
 class model_wrapper(nn.Module):
     def __init__(self):
         super(model_wrapper, self).__init__()
-
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     def initialize(self,opt):
         self.opt = opt
         self.save_dir = os.path.join(opt.checkpoint_dir,opt.name) if not opt.load_from_drive else '/content/drive/My Drive/'+opt.name
@@ -134,25 +134,116 @@ forward()
 更新学习率之类的
 """
 
+class SPADE(model_wrapper):
+    def __init__(self):
+        super(SPADE, self).__init__()
+    def initialize(self,opt):
+        model_wrapper.initialize(self,opt)
+        self.netG = network.create_G(G='SPADE',opt = opt,input_channel = opt.input_chan).to(self.device)
+        self.netE = network.create_E(opt).to(self.device)
+        # 这里还要+一个netE
+        if 'train' in self.opt.mode :
+            self.netD = network.create_D(opt.input_chan*2).to(self.device)
+            pretrain_path = '' if self.opt.mode == 'train' else self.save_dir
+            self.load_network(self.netD, 'D', opt.which_epoch, pretrain_path)
+            self.load_network(self.netG, 'G', opt.which_epoch, pretrain_path)
+            self.load_network(self.netE, 'E', opt.which_epoch, pretrain_path)
+            #loss function
+            self.l1loss = nn.L1Loss()
+            # remian to edit futher details
+            self.vggloss = Loss.pixHDversion_perceptual_loss(opt.gpu_ids)
+            # remian to edit futher details
+            # remain to add 拉姆达
+            self.KLDLoss = Loss.KLDLoss()
+            # self.TVloss = Loss.TVLoss()
+            # remain to add 拉姆达
+            # remain to add a hinge loss
+            self.GANloss = Loss.GANLoss(device = self.device,lsgan=opt.lsgan)
+            # remain to add a hinge loss
+            #loss function
+            #optimizer
+            G_params = list(self.netG.parameters())
+            G_params += list(self.netE.parameters())
+            self.optimizer_G = torch.optim.Adam(G_params,lr=opt.learningrate,betas=(0.9, 0.999))
+            self.optimizer_D = torch.optim.Adam(list(self.netD.parameters()),lr=opt.learningrate,betas=(0.9, 0.999))
+
+
+        elif 'test' in self.opt.mode :
+            self.load_network(self.netG, 'G', opt.which_epoch, self.save_dir)
+        else:
+            print('mode error,this would create a empty netG without pretrain params')
+
+        print('---------- Networks initialized -------------')
+        print('---------- NET G -------------')
+        print(self.netG)
+        print('---------- NET E -------------')
+        print(self.netE)
+        print('---------- NET D -------------')
+        print(self.netD)
+
+    def save(self,which_epoch):
+        self.save_network(self.netG, 'G', which_epoch, self.opt.gpu_ids)
+        self.save_network(self.netD, 'D', which_epoch, self.opt.gpu_ids)
+        self.save_network(self.netE, 'E', which_epoch, self.opt.gpu_ids)
+
+    def forward(self,input,segmap):
+        # input consist of labelmap and target image
+        # generally use one hot vector label map
+        # so far we don't have that...
+        label = input['label']
+        target = input['image']
+
+        # selfG forward
+        z, mu, logvar = self.encode_z(target)
+        KLD_loss = self.KLDLoss(mu, logvar) * 0.05 # self.opt.lambda_kld
+        generated_image = self.netG(label,z=z)
+        l1_loss = self.l1loss(target,generated_image) * 100.0
+        # selfG forward
+        # D forward
+        cat_fake = torch.cat((generated_image,label),1)
+        cat_real = torch.cat((generated_image,target),1)
+        dis_real = self.netD(cat_real)
+        dis_fake = self.netD(cat_fake.detach())
+        # D forward
+        # dis loss
+        loss_real = self.GANloss(dis_real,True)
+        loss_fake = self.GANloss(dis_real,False)
+        dis_loss = (loss_real + loss_fake) * 0.5
+        gan_loss = self.GANloss(cat_fake,True)
+        # dis loss
+        vgg_loss = self.vggloss(generated_image,target)
+        G_loss = gan_loss + l1_loss + KLD_loss + vgg_loss
+        return {'G_loss':G_loss,
+                'G_ganloss':gan_loss,
+                'l1_loss':l1_loss,
+                'dis_loss':dis_loss,'dis_real':loss_real,'dis_fake':loss_fake,
+                'vgg_loss':vgg_loss}
+
+
+
+    def encode_z(self,real_image):
+            mu,logvar = self.netE(real_image)
+            std = torch.exp(0.5 * logvar)
+            eps = torch.randn_like(std)
+            z = eps.mul(std) + mu
+            return z, mu, logvar
 
 
 class SCAR(model_wrapper):
     def __init__(self):
         super(SCAR, self).__init__()
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    def init_loss_filter(self, use_gan_feat_loss, use_vgg_loss):
-        flags = (True, use_gan_feat_loss, use_vgg_loss, True, True)
-        # gan = true, usegan = TBD, vgg = TBD, D real = true D fake = true
-        def loss_filter(g_gan, g_gan_feat, g_vgg, d_real, d_fake):
-            # 打包ganloss featureloss vggloss Dfake D real loss 和 flag
-            # 如果是ture 就返回这个loss
-            return [l for (l,f) in zip((g_gan,g_gan_feat,g_vgg,d_real,d_fake),flags) if f]
-        return loss_filter
-    # 暂时不需要
-
+    # def init_loss_filter(self, use_gan_feat_loss, use_vgg_loss):
+    #     flags = (True, use_gan_feat_loss, use_vgg_loss, True, True)
+    #     # gan = true, usegan = TBD, vgg = TBD, D real = true D fake = true
+    #     def loss_filter(g_gan, g_gan_feat, g_vgg, d_real, d_fake):
+    #         # 打包ganloss featureloss vggloss Dfake D real loss 和 flag
+    #         # 如果是ture 就返回这个loss
+    #         return [l for (l,f) in zip((g_gan,g_gan_feat,g_vgg,d_real,d_fake),flags) if f]
+    #     return loss_filter
+    # # 暂时不需要
     def initialize(self,opt):
         model_wrapper.initialize(self,opt)
-        self.netG = network.create_G(opt.input_chan).to(self.device)
+        self.netG = network.create_G(G = 'pix2pix',opt = opt,input_channel = opt.input_chan).to(self.device)
         # input_channel ,K = 64 ,downsample_num = 6
         # dpwmsample_num can be add in opt.downsample_num
         if 'train' in self.opt.mode :
@@ -164,7 +255,7 @@ class SCAR(model_wrapper):
 
             # in train mode no matter how we need a D except we are in test/eval mode
 
-            self.netD = network.create_D(opt.input_chan*2).to(self.device)
+            self.netD = network.create_D(D='patchGAN',input_channel=opt.input_chan*2).to(self.device)
             # cat the input and target into patchGAN
             # so far we only have 3 channel
             # input_channel,K = 64,n_layers = 4
@@ -190,7 +281,7 @@ class SCAR(model_wrapper):
             print(self.netG)
             print('---------- NET D -------------')
             print(self.netD)
-            # remain to push the model to cuda if avliable
+
 
         elif 'test' in self.opt.mode :
             self.load_network(self.netG, 'G', opt.which_epoch, self.save_dir)

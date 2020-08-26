@@ -49,9 +49,6 @@ class Visualizer():
         pipe = []
         pipe.append(transforms.ToTensor())
         transform_pipe = transforms.Compose(pipe)
-        resultfolder = path + '/epoch' + str(epoch)
-        print(resultfolder)
-        os.makedirs(resultfolder)
         print('saving result of %s_epoch, total %s image' % (epoch,len(testimages)))
         for testimage in testimages:
             rawimage = Image.open(testimage)
@@ -59,7 +56,7 @@ class Visualizer():
             rawtensor = transform_pipe(rawimage)[:,:,:int(w/2)].unsqueeze(0)
             result = netG(rawtensor.to("cuda" if torch.cuda.is_available() else "cpu"))
             pathlist = testimage.split('/',-1)
-            save_result(epoch=epoch,tensor=result,name=pathlist[-1],path=resultfolder)
+            save_result(epoch=epoch,tensor=result,name=pathlist[-1])
         print('Done')
 
 

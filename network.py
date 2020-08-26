@@ -4,16 +4,29 @@ import torch.nn as nn
 import numpy as np
 import generator
 import discriminator
-
-def create_G(input_channel ,K = 64 ,downsample_num = 6):
-    netG = generator.pix2pix_generator(input_channel,K = K, downsample_num = downsample_num,)
+import torch.functional as F
+def create_G(G,opt,input_channel,k = 64 ,downsample_num = 6):
+    if G == 'SPADE':
+        netG = generator.SpadeGenerator(opt=opt,firstK = opt.firstK,input_noise_dim = opt.z_dim)
+    elif G == 'pix2pix':
+        netG = generator.pix2pix_generator(input_channel,k = k, downsample_num = downsample_num,)
     netG.apply(init_weights)
     return netG
 
+def create_E(opt):
+    netE = generator.SpadeEncoder(opt)
+    netE.apply(init_weights)
+    return netE
 
+def create_D(D,opt,input_channel,K = 64,n_layers = 4):
+    if D == 'SPADE':
+        netD = discriminator.multiProgressDiscriminator(input_channel = input_channel,
+                                                        n_layers = opt.num_scale,
+                                                        k = K,getIntermFeat = opt.getIntermFeat,sigmoid = opt.use_sigmoid)
 
-def create_D(input_channel,K = 64,n_layers = 4):
-    netD = discriminator.patchGAN(input_channel,K = K,n_layers=n_layers)
+    elif D == 'patchGAN':
+        netD = discriminator.patchGAN(input_channel,K = K,n_layers=n_layers)
+
     netD.apply(init_weights)
     return netD
 
@@ -109,9 +122,30 @@ def ck(input_nc,k):
 
 
 
+# nn is imported from PyTorch
+class SpadeBN(nn.Module):
+    def __init__(self, nf,norm_nc):
+        super(SpadeBN, self).__init__()
+        nhidden = 128
+        self.bn = nn.BatchNorm2d(nf, affine=False)
+        # the params will determind by seg map
+        self.mlp_shared = nn.Sequential(
+            nn.Conv2d(nf, nhidden, kernel_size=1, padding=1),
+            nn.ReLU()
+        )
+        self.mlp_gamma = nn.Conv2d(nhidden, norm_nc, kernel_size=3, padding=1)
+        self.mlp_beta = nn.Conv2d(nhidden, norm_nc, kernel_size=3, padding=1)
 
-
-
+    def forward(self, input, segmap):
+        size = input.size()[-2:]
+        #not sure the size would be H * W
+        #(BS,CH,H,W)
+        #not sure what mask is , maybe is the segmap tensor
+        segmap = F.interpolate(segmap.float(), size=size,mode='nearest')
+        interim_conv = self.mlp_shared(segmap)
+        gamma = self.mlp_gamma(interim_conv)
+        beta = self.mlp_beta(interim_conv)
+        return self.bn(input) * (gamma+1) + beta
 
 
 # ck(10,10)

@@ -1,8 +1,6 @@
 import torch
 import torch.nn as nn
 
-# GANloss remain to update
-# pixel loss (use at patch GAN)
 class GANLoss(nn.Module):
     def __init__(self,device,lsgan=True):
         super(GANLoss, self).__init__()
@@ -16,14 +14,13 @@ class GANLoss(nn.Module):
         if label:
             target_tensor = torch.ones(input.shape)
 
-
         else:
             target_tensor = torch.zeros(input.shape)
 
         return target_tensor.to(self.device)
 
     def __call__(self, input, label):
-
+        # remain to be test
         if isinstance(input[0], list):
             loss = 0
             for input_i in input:
@@ -34,9 +31,7 @@ class GANLoss(nn.Module):
         else:
             target_tensor = self.transofrm_tensor(input[-1], label)
             return self.loss(input[-1], target_tensor)
-
-
-# remain to update
+        # remain to be test
 
 from torchvision import models
 
@@ -146,3 +141,13 @@ class TVLoss(nn.Module):
 # a = torch.rand(1,3,1024,1024)
 # b = torch.pow((a[:,:,1:,:]-a[:,:,:1024-1,:]),2)
 
+
+# KL Divergence loss used in VAE with an image encoder
+# get from spade
+class KLDLoss(nn.Module):
+    def __init__(self):
+        super(KLDLoss, self).__init__()
+
+    def forward(self, mu, logvar):
+        return -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
+# get from spade
