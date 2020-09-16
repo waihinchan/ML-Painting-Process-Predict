@@ -2,34 +2,8 @@ import torch
 from mydataprocess import dataset
 import torch.nn as nn
 import numpy as np
-import generator
-import discriminator
 import torch.functional as F
-def create_G(G,opt,input_channel,k = 64 ,downsample_num = 6):
-    if G == 'SPADE':
-        netG = generator.SpadeGenerator(opt=opt,firstK = opt.firstK,input_noise_dim = opt.z_dim)
-    elif G == 'pix2pix':
-        netG = generator.pix2pix_generator(input_channel,k = k, downsample_num = downsample_num,)
-    netG.apply(init_weights)
-    return netG
-
-def create_E(opt):
-    netE = generator.SpadeEncoder(opt)
-    netE.apply(init_weights)
-    return netE
-
-def create_D(D,opt,input_channel,K = 64,n_layers = 4):
-    if D == 'SPADE':
-        netD = discriminator.multiProgressDiscriminator(input_channel = input_channel,
-                                                        n_layers = opt.num_scale,
-                                                        k = K,getIntermFeat = opt.getIntermFeat,sigmoid = opt.use_sigmoid)
-
-    elif D == 'patchGAN':
-        netD = discriminator.patchGAN(input_channel,K = K,n_layers=n_layers)
-
-    netD.apply(init_weights)
-    return netD
-
+import torch.nn.utils.spectral_norm as spectral_norm
 
 # some tools
 
@@ -41,24 +15,49 @@ def init_weights(l):
         l.weight.data.normal_(1.0, 0.02)
         l.bias.data.fill_(0)
 
+# this is for the light flow
+def get_grid(batchsize, rows, cols, gpu_id=0, dtype=torch.float32):
+    hor = torch.linspace(-1.0, 1.0, cols)
+    hor.requires_grad = False
+    hor = hor.view(1, 1, 1, cols)
+    hor = hor.expand(batchsize, 1, rows, cols)
+    ver = torch.linspace(-1.0, 1.0, rows)
+    ver.requires_grad = False
+    ver = ver.view(1, 1, rows, 1)
+    ver = ver.expand(batchsize, 1, rows, cols)
+
+    t_grid = torch.cat([hor, ver], 1)
+    t_grid.requires_grad = False
+
+    if dtype == torch.float16: t_grid = t_grid.half()
+    return t_grid.cuda(gpu_id)
+# this is for the light flow
+
+# this is for spade network for generate the spectral norm layer
+def add_norm_layer(layer):
+    # we definely use spectral
+    layer = spectral_norm(layer)
+    # then we use batch norm
+    if getattr(layer, 'bias', None) is not None:
+        delattr(layer, 'bias')
+    layer.register_parameter('bias', None)
+    # remove bias in the previous layer, which is meaningless
+    # since it has no effect after normalization
+    # not sure where the theory from, just do it!
+    out_channels = getattr(layer, 'out_channels') if  hasattr(layer, 'out_channels') else layer.weight.size(0)
+    norm_layer = nn.BatchNorm2d(out_channels,affine=True)
+    # get the previous layer's input size, then add a batchNorm(we use BN rather than IN, not provide any option)
+    return nn.Sequential(layer, norm_layer)
+# this is for spade network
 
 
-def get_norm_layer(norm_type='instance'):
-    # base on the params define a norm_layer is a batchnorm or a instance norm
-    if norm_type == 'batch':
-        norm_layer = functools.partial(nn.BatchNorm2d, affine=True)
-        # 这是一个函数的包装器
-    elif norm_type == 'instance':
-        norm_layer = functools.partial(nn.InstanceNorm2d, affine=False)
-    else:
-        raise NotImplementedError('normalization layer [%s] is not found' % norm_type)
-    return norm_layer
+
 
 # some tools
 
 
 
-# basic block
+# basic structure
 
 def cNsN_K(input_channels,stride,N,k,padding,norm,activation):
     """
@@ -77,7 +76,10 @@ def cNsN_K(input_channels,stride,N,k,padding,norm,activation):
     return model
 
 def c7s1_k(input_nc,k):
-    return cNsN_K(input_channels=input_nc,stride=1,N=7,k=k,padding=0,norm=nn.InstanceNorm2d,activation=nn.ReLU(True))
+    c7s1k = []
+    c7s1k+=[nn.ReflectionPad2d(3)]
+    c7s1k+=cNsN_K(input_channels=input_nc,stride=1,N=7,k=k,padding=0,norm=nn.BatchNorm2d,activation=nn.ReLU(True))
+    return c7s1k
 
 def dk(input_nc,k):
     """
@@ -122,7 +124,7 @@ def ck(input_nc,k):
 
 
 
-# nn is imported from PyTorch
+# basic structure
 class SpadeBN(nn.Module):
     def __init__(self, nf,norm_nc):
         super(SpadeBN, self).__init__()
@@ -148,11 +150,7 @@ class SpadeBN(nn.Module):
         return self.bn(input) * (gamma+1) + beta
 
 
-# ck(10,10)
-# c7s1_k(10,10)
-# uk(3,k=10,stride=1,N=3,norm=nn.InstanceNorm2d,activation=nn.ReLU)
-# dk(10,50)
-# print(ResK(10,'zero',norm_layer=nn.InstanceNorm2d).conv_block)
+
 
 
 

@@ -8,6 +8,3 @@ def rename(path):
         os.rename(os.path.join(datapath,name), str(i)+'.png')
         # print(name)
 
-# rename('/Users/waihinchan/Documents/mymodel/scar/dataset/color/val')
-
-# os.rename('/Users/waihinchan/Documents/mymodel/scar/dataset/color/train/0','0.png')
