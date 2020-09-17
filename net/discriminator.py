@@ -1,4 +1,4 @@
-import network
+import net.network as network
 import torch
 import torch.nn as nn
 import numpy as np
@@ -33,7 +33,7 @@ class MultiscaleDiscriminator(nn.Module):
                 # iter each_scale' dis block
                 model = [getattr(self, 'scale'+str(num_D-1-i)+'_layer'+str(j)) for j in range(self.n_layers+2)]
             else:
-                model = getattr(self, 'layer'+str(num_D-1-i))
+                model = getattr(self, 'scale'+str(num_D-1-i))
 
             result.append(self.singleD_forward(model, input_downsampled))
             # get the result(if getinterm, each single D would have multi result, then would be numD * numlayers result)
@@ -66,12 +66,13 @@ class NlayerDiscriminator(nn.Module):
         for i in range(1,n_layers):
             # remain 1 last with stride 1
             temp_k = min(256,temp_k)
-            sequence += [network.cNsN_K(temp_k,2,N=kernal_w,k=temp_k*2,padding=padding_w,norm=norm_layer,stride=2,activation=nn.LeakyReLU(0.2,True))]
+            sequence += [network.cNsN_K(input_channels = temp_k,stride=2,N=kernal_w,k=temp_k*2,padding=padding_w,norm=norm_layer,activation=nn.LeakyReLU(0.2,True))]
+
             # CNsN_K return [model]
             # add one more [] outside
             temp_k *= 2
 
-        sequence += [network.cNsN_K(temp_k,2,N=kernal_w,k=temp_k*2,padding=padding_w,norm=norm_layer,stride=1,activation=nn.LeakyReLU(0.2,True))]
+        sequence += [network.cNsN_K(input_channels = temp_k,stride=1,N=kernal_w,k=temp_k*2,padding=padding_w,norm=norm_layer,activation=nn.LeakyReLU(0.2,True))]
         # the last is with stride = 1 conv layer + norm + activation
         sequence += [[nn.Conv2d(temp_k*2, 1, kernel_size=kernal_w, stride=1, padding=padding_w)]]
         # output the last (patch)

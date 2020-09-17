@@ -1,4 +1,4 @@
-import network
+import net.network as network
 import torch.nn as nn
 import torch.nn.utils.spectral_norm as spectral_norm
 import torch.functional as F

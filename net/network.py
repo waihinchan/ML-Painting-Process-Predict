@@ -78,7 +78,7 @@ def cNsN_K(input_channels,stride,N,k,padding,norm,activation):
 def c7s1_k(input_nc,k):
     c7s1k = []
     c7s1k+=[nn.ReflectionPad2d(3)]
-    c7s1k+=cNsN_K(input_channels=input_nc,stride=1,N=7,k=k,padding=0,norm=nn.BatchNorm2d,activation=nn.ReLU(True))
+    c7s1k+=cNsN_K(input_channels=input_nc,stride=1,N=7,k=k,padding=0,norm=nn.InstanceNorm2d,activation=nn.ReLU(True))
     return c7s1k
 
 def dk(input_nc,k):

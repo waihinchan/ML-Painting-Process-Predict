@@ -8,55 +8,81 @@ import numpy as np
 import torch.nn.utils.spectral_norm as spectral_norm
 import copy
 
-
 class global_frame_generator(nn.Module):
 
-    def __init__(self,input_channel,firstK=64,
+    def __init__(self,opt,input_channel,firstK=64,
                  n_downsample = 4,n_blocks = 9,
-                 norm_layer=nn.BatchNorm2d, padding_type='reflect'):
+                 norm_layer=nn.BatchNorm2d, padding_type='reflect',Debug = False):
+        """
+        n_block is the num of the res-block
+        n_downsample is the num of the downsample layer
+        firstK is the first kernel num of the conv layer
+        """
         assert(n_blocks>=0)
         super(global_frame_generator, self).__init__()
-        # the input will be the cat of the xT and the xt-1
+        self.Debug = Debug
+
         ngf = firstK
-        global_network = []
-        global_network += network.c7s1_k(input_channel,ngf)
+
+        downsample = []
+        downsample += network.c7s1_k(input_channel,ngf)
+        # 7 * 7 output 64 CH
+        # downsample layer
         temp_K = ngf
+
         for i in range(1,n_downsample+1):
             ds = network.dk(temp_K,temp_K*2)
             temp_K*=2
-            global_network+=ds
-        for i in range(1,n_blocks+1):
-            res = [resnet.ResK(dim=temp_K,padding_type=padding_type,norm_layer=nn.InstanceNorm2d)]
-            global_network += res
+            downsample+=ds
 
+        # downsample layer
+        # res-block
+        for i in range(1,n_blocks+1):
+            res = [resnet.ResK(dim=temp_K,padding_type=padding_type,norm_layer=norm_layer)]
+            downsample += res
+        # res-block
+        # upsample layer
+        # should cat with the output from the encoder if the encoder using a vector Z
+        self.downsample = nn.Sequential(*downsample)
+        upsample = []
         for i in range(1,n_downsample+1):
             us = network.uk(input_channels=temp_K,stride=2,N=3,k=int(temp_K/2))
             temp_K = int(temp_K/2)
-            global_network += us
+            upsample += us
+        self.upsample = nn.Sequential(*upsample)
+        # upsample layer
 
-        global_network += network.c7s1_k(temp_K,input_channel)
+        last = network.c7s1_k(temp_K,opt.output_channel)
+        self.last = nn.Sequential(*last)
 
-        global_network = nn.Sequential(*global_network)
-        self.model = global_network
 
-    def forward(self,input):
-        # w.r.t generate 1 frame
-        # forward 1 big data = genereate 1st frame then pass into it again then pass into it again again...
-        return self.model(input)
+    def forward(self,input,freature=None):
+        """
+        forward 1 big data will forward this many times.
+        each "small" forward take the previous frames and (if use the last frames also) as the input
+        pass though the init layer and the downsample layer
+        then cat with the feature map from the Encoder (like a U-net but the feature are different)
+        not sure should combine or not as quite like wasting caculation
+        """
+        x = input
+        x = self.downsample(x)
+        x = self.upsample(x)
+        x = self.last(x)
+        return x
 
 class Encoder(nn.Module):
     """
     with N conv + 2 liner fc for encode the feature of the difference of the current frame and the target frame
 
     """
-    def __init__(self,input_channel,firstK):
+    def __init__(self,input_channel,firstK=64):
         super(Encoder, self).__init__()
         kw = 3
         pw = int(np.ceil((kw - 1.0) / 2))
         ng = firstK
-        # the input will be the prev_fram(or blank image) cat with the real_last_frame
-        # for encode
+
         layer_0 = [nn.Conv2d(input_channel, ng, kw, stride=2, padding=pw),nn.BatchNorm2d(ng,affine=True)]
+
         self.layer_0 = nn.Sequential(*layer_0)
         tempk = ng
         self.layer_1 = nn.Sequential(*[nn.Conv2d(ng * 1, ng * 2, kw, stride=2, padding=pw)])
@@ -73,9 +99,11 @@ class Encoder(nn.Module):
     def forward(self,input):
 
         x = input
+
         if x.size(2) != 256 or x.size(3) != 256:
             x = F.interpolate(x, size=(256, 256), mode='bilinear')
             # not understand why the cropsize much bigger than these one, but still need a interpolate?
+        print(x.shape)
         x = self.layer_0(x)
         x = self.layer_1(self.actvn(x))
         x = self.layer_2(self.actvn(x))
@@ -83,9 +111,9 @@ class Encoder(nn.Module):
         x = self.layer_4(self.actvn(x))
         x = self.layer_5(self.actvn(x))
         x = self.actvn(x)
-        print(x.shape)
-        x = x.view(x.size(0), -1)
 
+
+        x = x.view(x.size(0), -1)
         # reshape
         # pass to 2 fc respectively
         mu = self.fc_mu(x)

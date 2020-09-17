@@ -23,7 +23,7 @@ class opt():
         self.output_channel = 3
         self.firstK = 64
         self.checkpoint_dir = "./checkpoint"
-        self.load_from_drive = True
+        self.load_from_drive = False
         # the model root
         self.name = "video"
         # this should be the dataset name and also the model name
@@ -49,6 +49,8 @@ class opt():
         self.z_dim = 256
         # spade
 
-        self.n_past_frames = 1
+        self.n_past_frames = 3
+
         self.bs_total_frames = 50
         # not sure this will exceed memory...
+        self.use_vector = False
