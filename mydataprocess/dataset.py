@@ -117,7 +117,8 @@ class video_dataset(data.Dataset):
         print("the dataset path is " + self.path)
         self.dir = sorted([os.path.join(self.path, i) for i in os.listdir(self.path) if os.path.isdir(os.path.join(self.path, i))])
         # ../dataset/video/1
-
+        self.opt.bs_total_frames = min(self.opt.bs_total_frames,300)
+        # protect the machine XD
     def __getitem__(self, index):
         path = self.dir[index]
         # ../dataset/video/index
@@ -126,28 +127,24 @@ class video_dataset(data.Dataset):
 
         # randomly pick the frame
         frames = []
-        if self.opt.bs_total_frames<=len(all_frames_path):
-            block = len(all_frames_path)//self.opt.bs_total_frames
-            for i in range(0,len(all_frames_path),block):
-                # for pick the index
-                pick_index = min(i+random.randint(0,block),len(all_frames_path)-1)
-                frames.append(all_frames_path[pick_index])
-        else:
+        if self.opt.bs_total_frames>=len(all_frames_path):
             mult = int(np.ceil(self.opt.bs_total_frames / len(all_frames_path)))
-            for time in range(mult):
+            for _ in range(mult):
                 all_frames_path += all_frames_path
             frames = sorted(all_frames_path)
+
+        block = len(all_frames_path)//self.opt.bs_total_frames
+        for i in range(0,len(all_frames_path),block):
+            pick_index = min(i+random.randint(0,block),len(all_frames_path)-1)
+            frames.append(all_frames_path[pick_index])
+
         # randomly pick the frame
         # build the pre-process pipie line
-        # rescale and convert it to tensor it's ok
-        # remain to add flip or crop or nothing....
+        # as i already resize the frames. so only need a to tensor
         frames = [Image.open(frame) for frame in frames]
         pipes = []
-        w,h = frames[-1].size
-        tw,th = self.opt.inputsize
-        if tw != w or th != h:
-            pipes.append(transforms.Resize((th,tw)))
-            # not sure which should at front
+        pipes.append(transforms.Resize(self.opt.input_size))
+
         pipes.append(transforms.ToTensor())
         pipes.append(transforms.Normalize((0.5, 0.5, 0.5),
                                           (0.5, 0.5, 0.5)))
@@ -157,8 +154,7 @@ class video_dataset(data.Dataset):
         tensor_list = [i for i in map(pipe,frames)]
         last_frame = pipe(frames[-1])
         # not sure the sequence, need a test...
-        # return 一个list of tensor
-        return {'frames':tensor_list,'last_frame':last_frame}
+        return {'frames':tensor_list,'target':last_frame}
 
 
     def __len__(self):

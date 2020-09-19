@@ -231,7 +231,13 @@ class SCAR(model_wrapper):
             cat_fake = torch.cat(temp_cat_fake, dim=1)
             # cat the fake_forward_frames and the fake current frames
             # get the featrue from netD
-            dis_real = self.netD(cat_real)
+            dis_real = self.netD(cat_real.detach())
+            """
+            # the cat real is consist of a list of fake image from the generator... so...
+            # if the forward happend once then backward maybe this is un-necessary.
+            # still remain for test
+            """
+
             dis_fake = self.netD(cat_fake.detach())
             # get the featrue from netD
 
@@ -249,7 +255,7 @@ class SCAR(model_wrapper):
             cat_T_fake = torch.cat(temp_cat_T_fake,dim=1)
             cat_T_real = torch.cat(temp_cat_T_real , dim=1)
             # get the featrue from netD_T
-            dis_T_real = self.netD_T(cat_T_real)
+            dis_T_real = self.netD_T(cat_T_real.detach())
             dis_T_fake = self.netD_T(cat_T_fake.detach())
             # get the featrue from netD_T
 
@@ -263,15 +269,30 @@ class SCAR(model_wrapper):
             l1_loss = self.l1loss(real_frames[i], G_output) * 100.0
             vgg_loss = self.vggloss(real_frames[i], G_output)
             G_loss = gan_loss + gan_T_loss + l1_loss + vgg_loss
-            D_loss = (loss_real+loss_fake)*0.5 + (loss_T_fake+loss_T_real)*0.5
+            D_loss = (loss_real+loss_fake)*0.5
+            D_T_loss =  (loss_T_fake+loss_T_real)*0.5
             return {
                 "G_loss":G_loss,
                 "D_loss":D_loss,
+                "D_T_loss":D_T_loss,
                 "vgg_loss":vgg_loss,
                 "l1_loss":l1_loss,
                 "gan_loss":gan_loss,
                 "gan_T_loss":gan_T_loss
             }
 
+    def update_learning_rate(self, epoch):
+        # eporch should pass a value like current_epoch - start_epoch
+        lr = self.opt.learningrate * (0.1 ** (epoch // 30))
+        for param_group in self.optimizer_D.param_groups:
+            param_group['lr'] = lr
+        for param_group in self.optimizer_D_T.param_groups:
+            param_group['lr'] = lr
+        for param_group in self.optimizer_G.param_groups:
+            param_group['lr'] = lr
+        print('the current decay(not include the fixed rate epoch)_%s loss is %s' % (epoch, lr))
 
-
+    def save(self, which_epoch):
+        self.save_network(self.netG, 'G', which_epoch, self.opt.gpu_ids)
+        self.save_network(self.self.netD_T, 'D_T', which_epoch, self.opt.gpu_ids)
+        self.save_network(self.netD, 'D', which_epoch, self.opt.gpu_ids)
