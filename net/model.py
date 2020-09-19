@@ -294,5 +294,5 @@ class SCAR(model_wrapper):
 
     def save(self, which_epoch):
         self.save_network(self.netG, 'G', which_epoch, self.opt.gpu_ids)
-        self.save_network(self.self.netD_T, 'D_T', which_epoch, self.opt.gpu_ids)
+        self.save_network(self.netD_T, 'D_T', which_epoch, self.opt.gpu_ids)
         self.save_network(self.netD, 'D', which_epoch, self.opt.gpu_ids)

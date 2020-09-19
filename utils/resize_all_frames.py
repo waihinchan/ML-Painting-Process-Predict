@@ -84,4 +84,4 @@ def resize_all_frames(path,save_dir = '/Users/waihinchan/Documents/mymodel/scar/
 
 
 
-resize_all_frames('/Users/waihinchan/Desktop/mydataset/video')
+resize_all_frames('/Users/waihinchan/Desktop/video')

@@ -6,7 +6,7 @@ extract_frames_num = 300
 cpu_num = multiprocessing.cpu_count()
 
 VIDEO_EXTENSIONS = [
-    '.mp4', '.AVI', '.MPEG', '.JPEG',
+    '.mp4', '.AVI', '.MPEG',
     '.wmv', '.m4v','MP4',
 ]
 
@@ -15,8 +15,11 @@ def is_video_file(filename):
     return any(filename.endswith(extension) for extension in VIDEO_EXTENSIONS)
 
 
+
 def grab_all_video(path):
+
     if os.path.isdir(path):
+
         videos = []
         all = os.walk(path)
         for root, dirs, files in all:
@@ -27,6 +30,7 @@ def grab_all_video(path):
 
     else:
         print("%s_is not a valid path!" %path)
+
 
 
 def get_frame(paths):
@@ -61,7 +65,7 @@ def get_all_frames(path,save_dir='../dataset/video'):
     :return: None
     """
     videos = grab_all_video(path)
-    print(videos)
+
     videos = [(video,save_dir) for video in videos]
     from multiprocessing import Pool
     with Pool(cpu_num) as p:
