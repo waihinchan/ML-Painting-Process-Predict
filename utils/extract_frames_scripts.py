@@ -2,7 +2,7 @@ import cv2
 import os
 import multiprocessing
 
-frequence = 1
+extract_frames_num = 300
 cpu_num = multiprocessing.cpu_count()
 
 VIDEO_EXTENSIONS = [
@@ -40,7 +40,8 @@ def get_frame(paths):
         print('create a folder %s' %folder)
     cap = cv2.VideoCapture(video_path)
     i=0
-
+    length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT ))
+    frequence = length//extract_frames_num
     while(cap.isOpened()):
         ret, frame = cap.read()
         if ret == False:
@@ -60,6 +61,7 @@ def get_all_frames(path,save_dir='../dataset/video'):
     :return: None
     """
     videos = grab_all_video(path)
+    print(videos)
     videos = [(video,save_dir) for video in videos]
     from multiprocessing import Pool
     with Pool(cpu_num) as p:
@@ -67,6 +69,6 @@ def get_all_frames(path,save_dir='../dataset/video'):
 
 
 
-get_all_frames('/Users/waihinchan/Desktop/duovideo')
+get_all_frames('/Users/waihinchan/Desktop/mydataset/bilibli_process')
 
 
