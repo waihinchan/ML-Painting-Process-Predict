@@ -1,56 +1,72 @@
-import torch
-import torch.nn as nn
-import mydataprocess
-from mydataprocess import dataset, mydataloader
+from mydataprocess import mydataloader
 import option
-import model
-from torchvision import transforms
-from PIL import Image
+import net.model
 import os
-import matplotlib.pyplot as plt
-
-
-
-myoption = option.opt()
-myoption.which_epoch = '60'
-myoption.mode = 'test'
-myoption.load_from_drive = False
-for name,value in vars(myoption).items():
-    print('%s=%s'%(name,value))
-
-mymodel = model.SCAR()
-mymodel.initialize(myoption)
-
-
-def grabdata(opt,path):
-    # path = os.path.join('./dataset',opt.name)
-    # inputname = path + '/a.png'
-    # print(inputname)
-    input_image = Image.open(path)
-    # transforms_pipe = dataset.build_pipe(opt)
-    pipe = []
-    pipe.append(transforms.ToTensor())
-    pipe = transforms.Compose(pipe)
-    image = pipe(input_image)[:,:,512:]
-    # image = pipe(input_image)
-
-    return image.unsqueeze(0)
-
-
-
-unloader = transforms.ToPILImage()  # reconvert into PIL image
-def imshow(tensor,interval = 0.5):
+import time
+from PIL import Image
+from torchvision import transforms
+import torch
+unloader = transforms.ToPILImage()
+def imsave(tensor,index):
     image = tensor.cpu().clone()  # we clone the tensor to not do changes on it
     image = image.squeeze(0)      # remove the fake batch dimension
     image = unloader(image)
-    image.save('./result/result.png')
+    image.save('./result/video_result/' + str(index) + '.jpg')
+
+myoption = option.opt()
+myoption.mode = 'test'
+myoption.which_epoch = '160'
+for name,value in vars(myoption).items():
+    print('%s=%s' % (name,value))
+
+mymodel = net.model.SCAR()
+mymodel.initialize(opt = myoption)
+
+# test data
+pipes = []
+pipes.append(transforms.Resize(myoption.input_size))
+pipes.append(transforms.ToTensor())
+pipes.append(transforms.Normalize((0.5, 0.5, 0.5),
+                                  (0.5, 0.5, 0.5)))
+pipe = transforms.Compose(pipes)
+
+test_tensor = pipe(Image.open("./dataset/step/_109/8.jpg")).unsqueeze(0).to(mymodel.device)
+# test data
+
+generator = mymodel.netG
+target = test_tensor
+forward_fake_frames = []
+for j in range(0, myoption.n_past_frames):
+    forward_fake_frames += [torch.zeros_like(target).to(mymodel.device)]
+
+    # blank image at first
+forward_fake_frames += [target]
+fake_frames = []
+for i in range(0,myoption.bs_total_frames):
+        input = None
+        input = torch.cat(forward_fake_frames, dim=1).detach()
+        G_output = None
+        prev_frame = forward_fake_frames[-1] if i == 0 else fake_frames[-1]
+        G_output = mymodel.netG(input,prev_frame)
+
+        forward_fake_frames[-1] = G_output
+        fake_frames.append(G_output)
+        imsave(G_output,i)
 
 
-a = grabdata(myoption ,'./dataset/color/test/2.png').to(mymodel.device)
-# print(a.shape)
-# print(torch.cat((a,a),1).shape)
-b = mymodel.netG(a)
-imshow(b)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

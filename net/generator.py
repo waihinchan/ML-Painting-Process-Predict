@@ -56,7 +56,7 @@ class global_frame_generator(nn.Module):
         self.last = nn.Sequential(*last)
 
 
-    def forward(self,input,freature=None):
+    def forward(self,input,prev_frame,freature=None):
         """
         forward 1 big data will forward this many times.
         each "small" forward take the previous frames and (if use the last frames also) as the input
@@ -66,8 +66,11 @@ class global_frame_generator(nn.Module):
         """
         x = input
         x = self.downsample(x)
+        # inlcude resblock
         x = self.upsample(x)
         x = self.last(x)
+        x = x + prev_frame
+        # need add a weight or something...
         return x
 
 class Encoder(nn.Module):

@@ -15,7 +15,7 @@ class opt():
         self.firstK = 64
         self.checkpoint_dir = "./checkpoint"
         self.load_from_drive = False
-        self.name = "video"
+        self.name = "step"
         self.batchSize = 1
         self.shuffle = True
         self.Nthreads = cpu_num / 8 # don't set it too high especially you have a lot cpu....
@@ -31,7 +31,9 @@ class opt():
         self.z_dim = 256
         self.use_spectral = True
         # spade
-        self.n_past_frames = 3
-        self.bs_total_frames = 100
+        self.n_past_frames = 1
+        self.bs_total_frames = 4
         self.input_size = 512
+        self.shuffle_ecah_time = False
+        self.save_result = False
         # this is the last input size

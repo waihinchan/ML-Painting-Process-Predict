@@ -2,9 +2,12 @@ import torch.utils.data
 
 def create_dataset(opt):
     mydataset = None
-
-    from mydataprocess.dataset import video_dataset
-    mydataset = video_dataset(opt)
+    if "video" in opt.name:
+        from mydataprocess.dataset import video_dataset
+        mydataset = video_dataset(opt)
+    elif "step" in opt.name:
+        from mydataprocess.dataset import step_dataset
+        mydataset = step_dataset(opt)
     print("dataset [%s] was created with %s data" % (opt.name,mydataset.__len__()))
 
     # dataset.initialize(opt)

@@ -65,7 +65,7 @@ def resize_to_suqare(path,desired_size=1024):
         cv2.imwrite(save_dir_name,new_im)
         cv2.destroyAllWindows()
 
-def resize_all_frames(path,save_dir = '/Users/waihinchan/Documents/mymodel/scar/dataset/resize_video3'):
+def resize_all_frames(path,save_dir = '/home/waihinchan/Desktop/scar/dataset/step_resize'):
     """
     :param path: the video path, can include sub-directory
     :return:
@@ -84,4 +84,4 @@ def resize_all_frames(path,save_dir = '/Users/waihinchan/Documents/mymodel/scar/
 
 
 
-resize_all_frames('/Users/waihinchan/Desktop/video')
+resize_all_frames('/home/waihinchan/Desktop/scar/dataset/step')

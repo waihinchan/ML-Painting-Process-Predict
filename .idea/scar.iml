@@ -8,6 +8,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="SPADE" />
     <orderEntry type="module" module-name="vid2vid" />
+    <orderEntry type="module" module-name="timecraft" />
   </component>
   <component name="PyDocumentationSettings">
     <option name="format" value="PLAIN" />

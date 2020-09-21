@@ -4,6 +4,7 @@ import net.model
 import os
 import time
 myoption = option.opt()
+# myoption.save_result=True
 for name,value in vars(myoption).items():
     print('%s=%s' % (name,value))
 
@@ -29,22 +30,21 @@ for i in range(1,mymodel.opt.epoch):
     for j, one_video_frames in enumerate(All_videos_frames,start=1):
         # the dataset will return a list of frame from only ONE video
         mymodel.set_requires_grad(mymodel.netD, True)
-        mymodel.set_requires_grad(mymodel.netD_T, True)
+        # mymodel.set_requires_grad(mymodel.netD_T, True)
         loss = mymodel(one_video_frames)
         # optmiz D nad D_T
         mymodel.optimizer_D.zero_grad()
         loss_D = loss['D_loss']
         loss_D.backward()
         mymodel.optimizer_D.step()
-        mymodel.netD_T.zero_grad()
-        loss_D = loss['D_T_loss']
-        loss_D.backward()
-        mymodel.optimizer_D_T.step()
-
+        # mymodel.netD_T.zero_grad()
+        # loss_D = loss['D_T_loss']
+        # loss_D.backward()
+        # mymodel.optimizer_D_T.step()
         # before optmiz G, cool down the params of D and D_T
 
         mymodel.set_requires_grad(mymodel.netD, False)
-        mymodel.set_requires_grad(mymodel.netD_T, False)
+        # mymodel.set_requires_grad(mymodel.netD_T, False)
 
         G_loss = loss['G_loss']
         mymodel.optimizer_G.zero_grad()
@@ -62,7 +62,9 @@ for i in range(1,mymodel.opt.epoch):
 
     if i % 5 == 0:
         print('epoch%s loss is %s' % (i,loss))
-
+        mymodel.opt.save_result = True
+    if i % 5 ==1:
+        mymodel.opt. save_result = False
     if i % 10==0:
         print('%s_epoch_loss' % i)
         mymodel.save(i)

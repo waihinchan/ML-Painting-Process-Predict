@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/../SPADE/.idea/SPADE.iml" filepath="$PROJECT_DIR$/../SPADE/.idea/SPADE.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/scar.iml" filepath="$PROJECT_DIR$/.idea/scar.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../timecraft/.idea/timecraft.iml" filepath="$PROJECT_DIR$/../timecraft/.idea/timecraft.iml" />
       <module fileurl="file://$PROJECT_DIR$/../vid2vid/.idea/vid2vid.iml" filepath="$PROJECT_DIR$/../vid2vid/.idea/vid2vid.iml" />
     </modules>
   </component>
