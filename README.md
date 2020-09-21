@@ -6,7 +6,7 @@ deep learning model for predict the process of an illustration
 
 so far there only a pretrain model target at decoloring from manga. Further updating in progress...<br/>
 
-****usage****:
+****usage****: for the master branch/
 
 1. put into ./checkpoint/color
 2. run test.py
