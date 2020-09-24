@@ -30,7 +30,7 @@ pipes.append(transforms.Normalize((0.5, 0.5, 0.5),
                                   (0.5, 0.5, 0.5)))
 pipe = transforms.Compose(pipes)
 
-test_tensor = pipe(Image.open("./dataset/step/_109/8.jpg")).unsqueeze(0).to(mymodel.device)
+test_tensor = pipe(Image.open("./dataset/step/_108/9.jpg")).unsqueeze(0).to(mymodel.device)
 # test data
 
 generator = mymodel.netG
