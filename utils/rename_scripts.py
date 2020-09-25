@@ -15,7 +15,7 @@ def rename(path):
     # for i, name in enumerate(a):
     #     os.rename(os.path.join(datapath,name), str(i)+'.png')
         # print(name)
-def rename_all_image(root_path):
+def get_all_images(root_path):
     if os.path.isdir(root_path):
         sub_dirs = []
         sub_dirs = [os.path.join(root_path,sub_dir) for sub_dir in os.listdir(root_path) if sub_dir != '.DS_Store']
@@ -28,4 +28,4 @@ def rename_all_image(root_path):
     else:
         print("%s_is not a valid path!" %root_path)
 
-rename_all_image('/home/waihinchan/Desktop/step')
+get_all_images('/Users/waihinchan/Documents/mymodel/scar/dataset/resize_step')
