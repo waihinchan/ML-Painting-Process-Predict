@@ -9,7 +9,7 @@ import platform
 import time
 from net.network import init_weights
 from utils import fast_check_result
-# fixed
+# ******************************************** don't touch here ***********************************************
 class model_wrapper(nn.Module):
 
     def __init__(self):
@@ -46,7 +46,6 @@ class model_wrapper(nn.Module):
 
         #this should be ./checkpoint/self.name/netG_or_netD
         torch.save(network.cpu().state_dict(), save_path)
-
 
         # remain to update according to the option using google drive or not
         # save this to the google drive
@@ -96,8 +95,9 @@ class model_wrapper(nn.Module):
     def update_learning_rate(self):
 
         pass
-# fixed
+# ******************************************** don't touch here ***********************************************
 
+# remain to update
 class SCAR(model_wrapper):
     def __int__(self):
         super(SCAR, self).__int__()
@@ -119,45 +119,47 @@ class SCAR(model_wrapper):
         # E_input = opt.input_chan * 2
         # self.netE = net.generator.Encoder(E_input,opt.firstK).to(self.device)
         # self.netE.apply(init_weights)
+        if opt.generate_first_frame:
+            self.netG_first = net.generator.global_frame_generator(opt=opt, input_channel=opt.input_chan,
+                                                             firstK=opt.firstK,
+                                                             n_downsample=opt.n_downsample_global,
+                                                             n_blocks=opt.n_blocks,generate_first_frame=True).to(self.device)
 
+            self.netG_first.apply(init_weights)
         # only when traning need it
         if 'train' in self.opt.mode:
-
-            D_T_input = (opt.output_channel * opt.n_past_frames) * 2
-            # self.netD_T = net.discriminator.MultiscaleDiscriminator(input_channel = D_T_input,
-            #                                                              k=opt.firstK,n_layers = 3,num_D = 1).to(self.device)
-            # self.netD_T.apply(init_weights)
-
-
             D_input = opt.output_channel * (opt.n_past_frames+1)
             self.netD = net.discriminator.MultiscaleDiscriminator(input_channel = D_input,
                                                                         k=opt.firstK,n_layers = 3,num_D = 1).to(self.device)
             self.netD.apply(init_weights)
+
             pretrain_path = '' if self.opt.mode == 'train' else self.save_dir
-            self.load_network(self.netD, 'D_frames', opt.which_epoch, pretrain_path)
-            self.load_network(self.netG, 'D_frame', opt.which_epoch, pretrain_path)
-            self.load_network(self.netD, 'G', opt.which_epoch, pretrain_path)
-            # self.load_network(self.netG, 'E', opt.which_epoch, pretrain_path)
+            self.load_network(self.netG, 'G', opt.which_epoch, pretrain_path)
+            self.load_network(self.netD, 'D', opt.which_epoch, pretrain_path)
+            # self.load_network(self.netE, 'E', opt.which_epoch, pretrain_path)
+            if self.opt.generate_first_frame:
+                self.load_network(self.netG_first, 'G_first', opt.which_epoch, pretrain_path)
+
 
             # loss
             self.l1loss = nn.L1Loss()
-
             self.vggloss = net.loss.pixHDversion_perceptual_loss(opt.gpu_ids)
-
-
             self.GANloss = net.loss.GANLoss(device = self.device,lsgan=opt.lsgan)
-
+            # self.Tvloss = net.loss.TVLoss()
 
             # G_params = list(self.netG.parameters()) + list(self.netE.parameters())
             G_params = list(self.netG.parameters())
             self.optimizer_G = torch.optim.Adam(G_params,lr=opt.learningrate,betas=(0.9, 0.999))
-            # self.optimizer_D_T = torch.optim.Adam(list(self.netD_T.parameters()),lr=opt.learningrate,betas=(0.9, 0.999))
             self.optimizer_D = torch.optim.Adam(list(self.netD.parameters()),lr=opt.learningrate,betas=(0.9, 0.999))
-
+            if opt.generate_first_frame:
+                self.optimizer_G_first = torch.optim.Adam(self.netG_first.parameters(),lr=opt.learningrate,betas=(0.9, 0.999))
 
         elif 'test' in self.opt.mode:
                 self.load_network(self.netG, 'G', opt.which_epoch, self.save_dir)
                 # self.load_network(self.netE, 'E', opt.which_epoch, self.save_dir)
+                if opt.generate_first_frame:
+                    self.load_network(self.netG_first, 'G_first', opt.which_epoch, self.save_dir)
+
         else:
             print('mode error,it would create a empty netG without pretrain params')
 
@@ -165,15 +167,22 @@ class SCAR(model_wrapper):
     def forward(self,input):
         target = input['target'].to(self.device)
 
-        real_frames = input['frames']
-
+        real_frames = input['frames'][1:] if self.opt.generate_first_frame else input['frames']
+        real_first_frame = input['frames'][0].to(self.device)
+        # if generate first frame we start from the second index
         for k in range(0,len(real_frames)):
             real_frames[k] = real_frames[k].to(self.device)
 
         fake_frames = []
 
-        forward_fake_frames = []
-        # forward_real_frames = []
+        if self.opt.generate_first_frame:
+            first_frame = self.netG_first(target,None)
+            # this should return the first sketch frame
+        else:
+            first_frame = torch.zeros_like(target)
+
+        for j in range(0, self.opt.n_past_frames):
+            fake_frames += [first_frame.detach().to(self.device)]
 
         # init the total loss
         G_loss = 0
@@ -181,98 +190,71 @@ class SCAR(model_wrapper):
         Vgg_loss = 0
         L1_loss = 0
         Gan_loss = 0
+
         # init the total loss
 
-        for j in range(0, self.opt.n_past_frames):
-            fake_frames += [torch.zeros_like(target).to(self.device)]
-            # forward_real_frames += [torch.zeros_like(target).to(self.device)]
-        # in step_dataset we have one blank image init
-        # [blank]
         for i in range(0,len(real_frames)):
-            # in step we have 4 in total
+            forward_fake_frames = [target]
+            forward_fake_frames += fake_frames[-self.opt.n_past_frames:]
+            # if generate first : forward_fake_frames = [target,first_fake_frame]
+            # else forward_fake_frames = [target,blank_image]
+            input = torch.cat(forward_fake_frames, dim=1)
+            G_output = self.netG(input, fake_frames[-1])
+            # G output = target+blankimage|first_fake_frame + blankimage|first_fake_frame
             if i < self.opt.n_past_frames:
-                forward_fake_frames = None
-                forward_fake_frames = [target]
-                forward_fake_frames += fake_frames[-self.opt.n_past_frames:]
-                # pick the last (n_past frames) and the last frames as input
-                input = torch.cat(forward_fake_frames,dim=1)
-                G_output = self.netG(input,fake_frames[-1])
-                #  netG.upsample(input) + previous frame
                 fake_frames[i] = G_output
-                # forward_fake_frames_ = fake_frames[0:self.opt.n_past_frames]
-                # forward_real_frames[i] = real_frames[i]
             else:
-                forward_fake_frames = None
-                forward_fake_frames = [target]
-                forward_fake_frames += fake_frames[-self.opt.n_past_frames:]
-                # forward_real_frames = real_frames[i-self.opt.n_past_frames+1:i+1]
-                input = torch.cat(forward_fake_frames, dim=1)
-                G_output = self.netG(input,fake_frames[-1])
                 fake_frames.append(G_output)
-                # forward_fake_frames_ = fake_frames[i - self.opt.n_past_frames + 1:i + 1]
 
             del forward_fake_frames[0]
-            # don't need the target anymore
+            # don't need the target frames anymore
 
             temp_cat_real = forward_fake_frames + [real_frames[i]]
             temp_cat_fake = forward_fake_frames + [G_output]
-
+            # if we generate first frame, the real_frames[0] = input['frames'][1] forward_fake_frames = first_frame
+            # other wise still real_frames[0] = input['frames'][0] forward_fake_frames = blankimages
             cat_real = torch.cat(temp_cat_real,dim=1)
             cat_fake = torch.cat(temp_cat_fake, dim=1)
             dis_real = self.netD(cat_real.detach())
-            """
-            # the cat real is consist of a list of fake image from the generator... so...
-            # if the forward happend once then backward maybe this is un-necessary.
-            # still remain for test
-            """
-
             dis_fake = self.netD(cat_fake.detach())
-            # get the featrue from netD
-
+            # not sure need a detach becaus the one of the element of the cat_real was from the generator itself,
+            # if we not detach, when update the D, will effect the G's params(or not? i still confused on the auto-grad function)
+            # or we can said when zero_grad D, we can no longer track the grad of the forward_cat_frames, so the optmizer will throw a error?
+            # need some test in the future
             # the loss of the single frame discriminator
             loss_real = self.GANloss(dis_real, True)
             loss_fake = self.GANloss(dis_fake, False)
             # the loss of the single frame discriminator
-            # the loss of the generator from the discriminator
-
-
-            # **** next is n_past_frames to the T_frames discriminator
-
-            # temp_cat_T_fake = forward_fake_frames_
-            # temp_cat_T_real = forward_real_frames
-            # cat_T_fake = torch.cat(temp_cat_T_fake,dim=1)
-            # cat_T_real = torch.cat(temp_cat_T_real , dim=1)
-            # # get the featrue from netD_T
-            # dis_T_real = self.netD_T(cat_T_real.detach())
-            # dis_T_fake = self.netD_T(cat_T_fake.detach())
-            # # get the featrue from netD_T
-            #
-            # # the loss of the single frame discriminator
-            # loss_T_real = self.GANloss(dis_T_real, True)
-            # loss_T_fake = self.GANloss(dis_T_fake, False)
-            # # the loss of the single frame discriminator
-            # # the loss of the generator from the discriminator
-            # gan_T_loss = self.GANloss(cat_T_fake, True)
-            # print(gan_T_loss.requires_grad)
-            # don't know why the loss grad disappear
-
-            # each frame's loss
             gan_loss = self.GANloss(cat_fake, True)
             l1_loss = self.l1loss(real_frames[i], G_output) * 100.0
             vgg_loss = self.vggloss(real_frames[i], G_output)
             g_loss = gan_loss  + l1_loss + vgg_loss
             d_loss = (loss_real+loss_fake)*0.5
             # each frame's loss
-
             Gan_loss += gan_loss
             L1_loss += l1_loss
             Vgg_loss += vgg_loss
             G_loss += g_loss
             D_loss += d_loss
 
-            if self.opt.save_result:
-                    fast_check_result.imsave(G_output, dir='./result/result_preview/', index=str(time.time()))
+        if self.opt.generate_first_frame:
+            # cat real and fake of the first_frame generator are the same like the label map and the ground truth
+            cat_fake = torch.cat((target,first_frame),dim=1)
+            cat_real = torch.cat((target,real_first_frame),dim=1)
+            dis_real = self.netD(cat_real)
+            dis_fake = self.netD(cat_fake.detach())
+            loss_real = self.GANloss(dis_real, True)
+            loss_fake = self.GANloss(dis_fake, False)
+            d_loss = (loss_real + loss_fake) * 0.5
+            D_loss += d_loss
+            firstG_loss = self.l1loss(real_first_frame, first_frame) * 50.0 + self.vggloss(real_first_frame,first_frame)*50 + self.GANloss(cat_fake, True)
 
+        if self.opt.save_result:
+            label = str(time.time())
+            for k,ouput in enumerate(fake_frames,start=0):
+                fast_check_result.imsave(ouput, dir='./result/result_preview/',index= label + str(k))
+            if self.opt.generate_first_frame:
+                fast_check_result.imsave(first_frame, dir='./result/result_preview/',index= label + "first_frame")
 
         return {
             "G_loss":G_loss,
@@ -280,20 +262,128 @@ class SCAR(model_wrapper):
             "vgg_loss":Vgg_loss,
             "l1_loss":L1_loss,
             "gan_loss":Gan_loss,
+            "firstG_loss": firstG_loss if self.opt.generate_first_frame else None
         }
 
     def update_learning_rate(self, epoch):
         # eporch should pass a value like current_epoch - start_epoch
-        lr = self.opt.learningrate * (0.1 ** (epoch // 30))
+        lr = self.opt.learningrate * (0.1 ** (epoch // 10))
         for param_group in self.optimizer_D.param_groups:
             param_group['lr'] = lr
-        # for param_group in self.optimizer_D_T.param_groups:
-        #     param_group['lr'] = lr
         for param_group in self.optimizer_G.param_groups:
             param_group['lr'] = lr
+
+        if self.opt.generate_first_frame:
+            for param_group in self.optimizer_G_first.param_groups:
+                param_group['lr'] = lr
         print('the current decay(not include the fixed rate epoch)_%s loss is %s' % (epoch, lr))
 
     def save(self, which_epoch):
         self.save_network(self.netG, 'G', which_epoch, self.opt.gpu_ids)
-        # self.save_network(self.netD_T, 'D_T', which_epoch, self.opt.gpu_ids)
         self.save_network(self.netD, 'D', which_epoch, self.opt.gpu_ids)
+        if self.opt.generate_first_frame:
+            self.save_network(self.netG_first, 'G_first', which_epoch, self.opt.gpu_ids)
+
+# 明日之星！！！
+class sketch_style(model_wrapper):
+    """
+    let's say we have a sketch image without the style, we want to transfrom it into a style sketch
+    kind of like spade.. but spade use resblock, for a simply start i use a VAE or a something like U-net..
+    """
+    def __init__(self):
+        super(sketch_style, self).__init__()
+    def initialize(self, opt):
+        model_wrapper.initialize(self, opt)
+        self.netE = net.generator.Encoder(opt.input_chan)
+        self.netE.apply(init_weights())
+        # encoder for the style
+        # generator for the image
+        # generator takes z and the input image
+    def forward(self):
+        pass
+
+    def encode_z(self, real_image):
+
+        mu, logvar = self.netE(real_image)
+        z = self.reparameterize(mu, logvar)
+        return z, mu, logvar
+    def reparameterize(self, mu, logvar):
+        std = torch.exp(0.5 * logvar)
+        eps = torch.randn_like(std)
+        return eps.mul(std) + mu
+    def generate_fake(self, input_semantics, real_image):
+        z = None
+        KLD_loss = None
+        z, mu, logvar = self.encode_z(real_image)
+        KLD_loss = self.KLDLoss(mu, logvar) * self.opt.lambda_kld
+        fake_image = self.netG(input_semantics, z=z)
+
+
+        return fake_image, KLD_loss
+
+
+# this was from the master branch
+class single_frame(model_wrapper):
+    def __init__(self):
+        super(single_frame, self).__init__()
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    def initialize(self,opt):
+        model_wrapper.initialize(self,opt)
+        self.netG = net.generator.pix2pix_generator(opt.input_chan).to(self.device)
+        self.netG.apply(init_weights)
+        if 'train' in self.opt.mode :
+            self.netD = net.discriminator.patchGAN(opt.input_chan*2).to(self.device)
+            self.netD.apply(init_weights)
+            pretrain_path = '' if self.opt.mode == 'train' else self.save_dir
+            self.load_network(self.netD, 'D', opt.which_epoch, pretrain_path)
+            self.load_network(self.netG, 'G', opt.which_epoch, pretrain_path)
+            self.l1loss = nn.L1Loss()
+            self.vggloss = net.loss.pixHDversion_perceptual_loss(opt.gpu_ids)
+            self.TVloss = net.loss.TVLoss()
+            self.GANloss = net.loss.GANLoss(device = self.device,lsgan=opt.lsgan)
+            self.optimizer_G = torch.optim.Adam(list(self.netG.parameters()),lr=opt.learningrate,betas=(0.9, 0.999))
+            self.optimizer_D = torch.optim.Adam(list(self.netD.parameters()),lr=opt.learningrate,betas=(0.9, 0.999))
+            print('---------- Networks initialized -------------')
+            print('---------- NET G -------------')
+            print(self.netG)
+            print('---------- NET D -------------')
+            print(self.netD)
+        elif 'test' in self.opt.mode :
+            self.load_network(self.netG, 'G', opt.which_epoch, self.save_dir)
+        else:
+            print('mode error,this would create a empty netG without pretrain params')
+    def forward(self,input):
+        target_image = input['target'].to(self.device)
+        input_image = input['input'].to(self.device)
+        generated = self.netG(input_image)
+        cat_fake = torch.cat((generated,input_image),1)
+        cat_real = torch.cat((target_image,input_image),1)
+        dis_real = self.netD(cat_real)
+        dis_fake = self.netD(cat_fake.detach())
+        loss_real = self.GANloss(dis_real,True)
+        loss_fake = self.GANloss(dis_fake,False)
+        dis_loss = (loss_real + loss_fake) * 0.5
+        gan_loss = self.GANloss(cat_fake,True)
+        l1_loss = self.l1loss(target_image,generated) * 100.0
+        TV_loss = self.TVloss(generated)
+        vgg_loss = self.vggloss(generated,target_image)
+        G_loss = gan_loss + TV_loss + vgg_loss + l1_loss
+        if self.opt.save_result:
+            fast_check_result.imsave(generated[-1,:,:,:],index=time.time(),dir='./result/result_preview/')
+            # only save the last one... for saving space
+        return {'G_loss':G_loss,
+                'G_ganloss':gan_loss,
+                'l1_loss':l1_loss,
+                'TV_loss':TV_loss,
+                'D_loss':dis_loss,'dis_real':loss_real,'dis_fake':loss_fake,
+                'vgg_loss':vgg_loss}
+    def save(self,which_epoch):
+        self.save_network(self.netG, 'G', which_epoch, self.opt.gpu_ids)
+        self.save_network(self.netD, 'D', which_epoch, self.opt.gpu_ids)
+    def update_learning_rate(self,epoch):
+        lr = self.opt.learningrate * (0.1 ** (epoch // 10))
+        for param_group in self.optimizer_D.param_groups:
+         param_group['lr'] = lr
+        for param_group in self.optimizer_G.param_groups:
+            param_group['lr'] = lr
+        print('the current decay(not include the fixed rate epoch)_%s loss is %s'%(epoch,lr))

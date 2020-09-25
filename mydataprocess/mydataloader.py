@@ -8,11 +8,14 @@ def create_dataset(opt):
     elif "step" in opt.name:
         from mydataprocess.dataset import step_dataset
         mydataset = step_dataset(opt)
+    elif "single" in opt.name:
+        from mydataprocess.dataset import single_frame
+        mydataset = single_frame(opt)
+    elif "color" in opt.name:
+        from mydataprocess.dataset import colordataset
+        mydataset = colordataset(opt)
+
     print("dataset [%s] was created with %s data" % (opt.name,mydataset.__len__()))
-
-    # dataset.initialize(opt)
-    # TBD
-
     return mydataset
 
 class Dataloader():

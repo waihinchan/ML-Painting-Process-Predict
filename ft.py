@@ -31,7 +31,7 @@ import torch
 import option
 from utils import fast_check_result
 myoption = option.opt()
-myoption.name = 'step'
+myoption.name = 'color'
 myoption.bs_total_frames = 5
 for name,value in vars(myoption).items():
     print('%s=%s' % (name,value))
@@ -39,24 +39,30 @@ for name,value in vars(myoption).items():
 dataloader = mydataloader.Dataloader(myoption)
 
 thedataset = dataloader.load_data()
-once = True
-i=0
 
-for data in thedataset:
-    i+=1
-    if once:
-        j=0
-        frames = data['frames']
-        for frame in frames:
-            fast_check_result.imsave(frame, dir='./result/data_result2/', index=str(i)+'-'+str(j))
-            j+=1
-        last_frames = data['target']
-#         print('******************** printing frames shape ********************')
-#         print(frames[-1].shape)
-#         print('******************** printing last frame shape ********************')
-#         print(last_frames.shape)
-        fast_check_result.imsave(last_frames,dir = './result/data_result2/',index=str(i)+('target'))
-        # once = False
+for i, data in enumerate(thedataset,start=0):
+    sketch = data['target']
+    lastframe = data['input']
+    fast_check_result.imsave(sketch, dir='./result/data_result2/', index=str(i) + '-' + 'target')
+    fast_check_result.imsave(lastframe, dir='./result/data_result2/', index=str(i) + '-' + 'input')
+
+# once = True
+# i = 0
+# for data in thedataset:
+#     i+=1
+#     if once:
+#         j=0
+#         frames = data['frames']
+#         for frame in frames:
+#             fast_check_result.imsave(frame, dir='./result/data_result/', index=str(i)+'-'+str(j))
+#             j+=1
+#         last_frames = data['target']
+# #         print('******************** printing frames shape ********************')
+# #         print(frames[-1].shape)
+# #         print('******************** printing last frame shape ********************')
+# #         print(last_frames.shape)
+#         fast_check_result.imsave(last_frames,dir = './result/data_result2/',index=str(i)+('target'))
+#         # once = False
 
 # ********************************** this is for test the dataset working **********************************
 

@@ -138,9 +138,6 @@ class TVLoss(nn.Module):
         # 就是用 相邻像素想减之后的平方和
         return self.TVLoss_weight*2*(h_tv/count_h+w_tv/count_w)/batch_size
         # why *2
-# a = torch.rand(1,3,1024,1024)
-# b = torch.pow((a[:,:,1:,:]-a[:,:,:1024-1,:]),2)
-
 
 # KL Divergence loss used in VAE with an image encoder
 # get from spade

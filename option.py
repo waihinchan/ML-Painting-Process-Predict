@@ -17,6 +17,7 @@ class opt():
         self.load_from_drive = False
         self.name = "step"
         self.batchSize = 1
+        # don't set it to other
         self.shuffle = True
         self.Nthreads = cpu_num / 8 # don't set it too high especially you have a lot cpu....
         self.gpu_ids = torch.cuda.device_count()
@@ -37,3 +38,4 @@ class opt():
         self.shuffle_ecah_time = False
         self.save_result = False
         # this is the last input size
+        self.generate_first_frame = True
