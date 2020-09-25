@@ -1,54 +1,55 @@
+import torch
+import torch.nn as nn
+import mydataprocess
+from mydataprocess import dataset, mydataloader
 import option
-import net.model
-from PIL import Image
 from torchvision import transforms
-unloader = transforms.ToPILImage()
-def imsave(tensor,index):
+from PIL import Image
+import os
+import matplotlib.pyplot as plt
+import net.model
+
+
+myoption = option.opt()
+myoption.which_epoch = '60'
+myoption.mode = 'test'
+myoption.load_from_drive = False
+for name,value in vars(myoption).items():
+    print('%s=%s'%(name,value))
+
+mymodel = net.model.single_frame()
+mymodel.initialize(myoption)
+
+
+def grabdata(opt,path):
+    # path = os.path.join('./dataset',opt.name)
+    # inputname = path + '/a.png'
+    # print(inputname)
+    input_image = Image.open(path)
+    # transforms_pipe = dataset.build_pipe(opt)
+    pipe = []
+    pipe.append(transforms.ToTensor())
+    pipe = transforms.Compose(pipe)
+    image = pipe(input_image)[:,:,512:]
+    # image = pipe(input_image)
+
+    return image.unsqueeze(0)
+
+
+
+unloader = transforms.ToPILImage()  # reconvert into PIL image
+def imshow(tensor,interval = 0.5):
     image = tensor.cpu().clone()  # we clone the tensor to not do changes on it
     image = image.squeeze(0)      # remove the fake batch dimension
     image = unloader(image)
-    image.save('./result/single/' + str(index) + '.jpg')
-
-myoption = option.opt()
-myoption.name = 'single_frame'
-myoption.mode = 'test'
-myoption.which_epoch = '190'
-for name,value in vars(myoption).items():
-    print('%s=%s' % (name,value))
-
-mymodel = net.model.single_frame()
-mymodel.initialize(opt = myoption)
-
-# test data
-pipes = []
-pipes.append(transforms.Resize((512,512)))
-pipes.append(transforms.ToTensor())
-# pipes.append(transforms.Normalize((0.5, 0.5, 0.5),
-#                                   (0.5, 0.5, 0.5)))
-pipe = transforms.Compose(pipes)
-
-test_tensor = pipe(Image.open('/home/waihinchan/Desktop/123.jpeg')).unsqueeze(0).to(mymodel.device)
-# test data
-print(test_tensor.shape)
-generator = mymodel.netG
-
-G_out = generator(test_tensor)
-imsave(G_out,'single_test')
+    image.save('./result/result2.png')
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+a = grabdata(myoption,'./dataset/color/test/15.png').to(mymodel.device)
+# print(a.shape)
+# print(torch.cat((a,a),1).shape)
+b = mymodel.netG(a)
+imshow(b)
 
 
 
