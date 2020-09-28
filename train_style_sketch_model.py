@@ -1,37 +1,49 @@
-# this is for train the color image to sketch
-# next we need to
-
 import option
 import net.model
 import os
 import time
 from mydataprocess import mydataloader
+
+# # this is for the wireframe generator
+# wireframe_option = option.opt()
+# wireframe_option.name = 'color'
+# wireframe_option.which_epoch = '190'
+# wireframe_option.mode = 'test'
+# wireframe_model = net.model.single_frame()
+# wireframe_model.initialize(wireframe_option)
+# # this is for the wireframe generator
+
+
 myoption = option.opt()
-# myoption.save_result=True
-myoption.name = 'sketch_style'
-myoption.mode = 'train'
-# myoption.which_epoch = '190'
-myoption.batchSize = 5
+myoption.name = 'color'
 for name,value in vars(myoption).items():
     print('%s=%s' % (name,value))
 
 dataloader = mydataloader.Dataloader(myoption)
 All_data = dataloader.load_data()
-mymodel = net.model.single_frame()
-# is single_frame but we take data from
+#
+mymodel = net.model.style_transfer_model()
 mymodel.initialize(opt = myoption)
 print(mymodel)
 print('start to train')
+
 for i in range(1,mymodel.opt.epoch):
     epoch_start_time = time.time()
-    for j, one_video_frames in enumerate(All_data,start=1):
-        mymodel.set_requires_grad(mymodel.netD, True)
-        loss = mymodel(one_video_frames)
-        mymodel.optimizer_D.zero_grad()
-        loss_D = loss['D_loss']
-        loss_D.backward()
-        mymodel.optimizer_D.step()
-        mymodel.set_requires_grad(mymodel.netD, False)
+    for j, pair_data in enumerate(All_data,start=1):
+        # input_sketch = wireframe_model.inference(pair_data['input'])  # this is the "fake" input..
+        # x = {
+        #     'input':input_sketch,
+        #     'target':pair_data['target']
+        # }
+        x = pair_data
+
+        # mymodel.set_requires_grad(mymodel.netD, True)
+        loss = mymodel(x) # not sure if need a detach
+        # mymodel.optimizer_D.zero_grad()
+        # loss_D = loss['D_loss']
+        # loss_D.backward()
+        # mymodel.optimizer_D.step()
+        # mymodel.set_requires_grad(mymodel.netD, False)
         G_loss = loss['G_loss']
         mymodel.optimizer_G.zero_grad()
         G_loss.backward()
@@ -46,7 +58,7 @@ for i in range(1,mymodel.opt.epoch):
         mymodel.update_learning_rate(updateepoch)
     if i % 5 == 0:
         print('epoch%s last loss is %s' % (i, loss))
-    if i % 10==0:
+    if i % 10 == 0:
         mymodel.save(i)
         print('save %s_epoch' % i)
         mymodel.opt.save_result = True
