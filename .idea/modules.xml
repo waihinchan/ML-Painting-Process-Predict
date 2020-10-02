@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/../SPADE/.idea/SPADE.iml" filepath="$PROJECT_DIR$/../SPADE/.idea/SPADE.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../pix2pixHD/.idea/pix2pixHD.iml" filepath="$PROJECT_DIR$/../pix2pixHD/.idea/pix2pixHD.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/scar.iml" filepath="$PROJECT_DIR$/.idea/scar.iml" />
     </modules>
   </component>
