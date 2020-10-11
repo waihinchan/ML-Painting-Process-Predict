@@ -11,6 +11,7 @@ def init_weights(l):
     classname = l.__class__.__name__
     if classname.find('Conv') != -1:
         l.weight.data.normal_(0.0, 0.02)
+
     if classname.find('BatchNorm2d') != -1:
         l.weight.data.normal_(1.0, 0.02)
         l.bias.data.fill_(0)
@@ -90,7 +91,7 @@ def dk(input_nc,k):
     :param padding: padding
     :return: a list with the above structure
     """
-    return cNsN_K(input_channels=input_nc,stride=2,N=3,k=k,padding=1,norm=nn.InstanceNorm2d,activation=nn.ReLU(True))
+    return cNsN_K(input_channels=input_nc,stride=1,N=3,k=k,padding=1,norm=nn.InstanceNorm2d,activation=nn.ReLU(True))
 
 def uk(input_channels,stride,N,k,norm = nn.InstanceNorm2d, activation = nn.ReLU(True)):
     """
@@ -106,7 +107,7 @@ def uk(input_channels,stride,N,k,norm = nn.InstanceNorm2d, activation = nn.ReLU(
     :return: list with the above structure
     """
     model = [nn.ConvTranspose2d(input_channels,k,kernel_size=N,stride=stride,padding=1,output_padding=1),
-             norm(k),
+             norm(num_features=k,affine=True),
              activation]
     return model
 
@@ -123,10 +124,10 @@ def ck(input_nc,k):
     return cNsN_K(input_channels=input_nc,k=k,N=4,padding=1,norm=nn.InstanceNorm2d,activation=nn.LeakyReLU(0.2,True),stride=2)
 
 
-
+# forget what i code here... just copy a new one
 # basic structure
 class SpadeBN(nn.Module):
-    def __init__(self, nf,norm_nc):
+    def __init__(self, nf, norm_nc):
         super(SpadeBN, self).__init__()
         nhidden = 128
         self.bn = nn.BatchNorm2d(nf, affine=False)
@@ -149,7 +150,7 @@ class SpadeBN(nn.Module):
         beta = self.mlp_beta(interim_conv)
         return self.bn(input) * (gamma+1) + beta
 
-
+# forget what i code here... just copy a new one
 
 
 

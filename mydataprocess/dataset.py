@@ -7,6 +7,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 from torchvision import transforms
 import re
+import torch
 
 # *************************data process**************************** #
 
@@ -105,42 +106,35 @@ and randomly pick the frame in a Interval
 like we want 1000 frames in total (during 1 batchsize train) and 1 data contains of 5000 frames
 we will split the dataset into 5000 / 1000 block, pick 1 frame at each block
 """
-class single_frame(data.Dataset):
-    def __init__(self, opt):
-        super(single_frame, self).__init__()
+
+
+class single_image(data.Dataset):
+    def __init__(self,opt):
+        super(single_image, self).__init__()
         self.opt = opt
         self.data_root_path = os.path.join(os.getcwd(), "dataset")
         print("the root dataset path is " + self.data_root_path)
         self.path = os.path.join(self.data_root_path, opt.name)
         # ../dataset/video/
         print("the dataset path is " + self.path)
-        self.dir = sorted([os.path.join(self.path, i) for i in os.listdir(self.path) if
-                           os.path.isdir(os.path.join(self.path, i))])
-
-
+        self.all_images = sorted([os.path.join(self.path, i) for i in os.listdir(self.path) if is_image_file(os.path.join(self.path, i))])
+        # ../dataset/video/1
     def __getitem__(self, index):
-        path = self.dir[index]
-        # ../dataset/video/index
-        all_frames_path = [i for i in os.listdir(path) if is_image_file(i)]
-        all_frames_path.sort(key=lambda x: int(re.match('(\d+)\.', x).group(1)))
-        all_frames_path = [os.path.join(path, i) for i in all_frames_path]
-        # all the full path of each frames are include inside
+        tensor = Image.open(self.all_images[index])
         pipes = []
         pipes.append(transforms.Resize(self.opt.input_size))
+        pipes.append(transforms.CenterCrop(self.opt.input_size))
         pipes.append(transforms.ToTensor())
-        # pipes.append(transforms.Normalize((0.5, 0.5, 0.5),
-        #                                   (0.5, 0.5, 0.5)))
-
         pipe = transforms.Compose(pipes)
-        input = pipe(Image.open(all_frames_path[-1]))
-        target = pipe(Image.open(all_frames_path[1]))
-        return {'input': input, 'target': target}
+        pipes.append(transforms.Normalize((0.5, 0.5, 0.5),
+                                          (0.5, 0.5, 0.5)))
+        head = pipe(tensor)
+        return head
+
 
     def __len__(self):
-        return len(self.dir) // self.opt.batchSize * self.opt.batchSize
+        return len(self.all_images)//self.opt.batchSize * self.opt.batchSize
         # remain to test
-
-
 
 class step_dataset(data.Dataset):
     def __init__(self,opt):
@@ -253,10 +247,55 @@ class video_dataset(data.Dataset):
         return len(self.dir)//self.opt.batchSize * self.opt.batchSize
         # remain to test
 
+class pair_dataset(data.Dataset):
+    def __init__(self,opt):
+        super(pair_dataset, self).__init__()
+        self.opt = opt
+        self.data_root_path = os.path.join(os.getcwd(), "dataset")
 
+        print("the root path is " + self.data_root_path)
+
+        self.path = os.path.join(self.data_root_path, opt.name)
+        # ./dataset/datasetname/
+        # this willreturn the full path of each image
+        print("the dataset path is " + self.path)
+        all = os.walk(self.path)
+        all_pairs = []
+        for root, dirs, files in all:
+            for dir in dirs:
+                if 'pair' in dir:
+                    all_pairs.append(os.path.join(root, dir))
+        self.all_pairs = sorted(all_pairs)
+
+
+    def __getitem__(self, index):
+        pair_paths = [os.path.join(self.all_pairs[index],img) for img in os.listdir(self.all_pairs[index])]
+        pair_paths = sorted(pair_paths)
+        frames = [Image.open(img) for img in pair_paths]
+        pipes = []
+        pipes.append(transforms.Resize(self.opt.input_size))
+        # pipes.append(transforms.CenterCrop(self.opt.input_size))
+        pipes.append(transforms.ToTensor())
+        # pipes.append(transforms.Normalize((0.5, 0.5, 0.5),
+        #                                   (0.5, 0.5, 0.5)))
+        # not sure should use this... if use this the difference will dissappear.. but should be in the data not the tensor
+        pipe = transforms.Compose(pipes)
+        tensor_list = [i for i in map(pipe,frames)]
+        # TODO: will get rid of this in the future
+        label = tensor_list[-2][0:3,:,:]
+        # label[label==0] = 1
+        label[label > 0] = 1
+        label = label[-1:,:,:]
+        return {'current':tensor_list[0],'next':tensor_list[1],'last':tensor_list[-1],'difference':tensor_list[2],'label':label}
+        # return {'current':tensor_list[0],'last':tensor_list[-1],'difference':tensor_list[2],'next':tensor_list[1]}
+
+
+
+    def __len__(self):
+        return len(self.all_pairs) // self.opt.batchSize * self.opt.batchSize
+
+# this is for the color to sketch dataset
 class colordataset(data.Dataset):
-    # this is for the images which are combine together, and in train test eval etc folder
-    # but still some details reamin to update
     def __init__(self,opt):
         super(colordataset, self).__init__()
         self.opt = opt
@@ -269,8 +308,6 @@ class colordataset(data.Dataset):
         # ./dataset/datasetname/train
         self.dir = sorted([i for i in os.listdir(self.path) if is_image_file(i)])
 
-
-        # this willreturn the full path of each image
         print("the dataset path is " + self.path)
 
     def __getitem__(self, index):
@@ -286,10 +323,9 @@ class colordataset(data.Dataset):
         rawtensor = transform_pipe(rawimage)
         return {'input':rawtensor[:,:,:int(w/2)],'target':rawtensor[:,:,int(w/2):]}
 
-
     def __len__(self):
         return len(self.dir) // self.opt.batchSize * self.opt.batchSize
-
+# this is for the color to sketch dataset
 
 
 

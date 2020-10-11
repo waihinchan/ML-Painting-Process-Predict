@@ -2,6 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="0c9dff85-c10a-46a7-bfaa-b6306e4aebb9" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/../vid2vid/.idea/vid2vid.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SPADE/models/networks/encoder.py" beforeDir="false" afterPath="$PROJECT_DIR$/../SPADE/models/networks/encoder.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SPADE/models/networks/generator.py" beforeDir="false" afterPath="$PROJECT_DIR$/../SPADE/models/networks/generator.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/scar.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/scar.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
@@ -19,8 +22,9 @@
       <change beforePath="$PROJECT_DIR$/option.py" beforeDir="false" afterPath="$PROJECT_DIR$/option.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/others/Neural_Style_algorithm.py" beforeDir="false" afterPath="$PROJECT_DIR$/others/Neural_Style_algorithm.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/result/result.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/test_single.py" beforeDir="false" afterPath="$PROJECT_DIR$/test_single.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/utils/fast_check_result.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/fast_check_result.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/flip_script.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/flip_script.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/make_pair_dataset.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/make_pair_dataset.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -47,10 +51,10 @@
     <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../pix2pixHD" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../vid2vid" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
-  <component name="RunManager" selected="Python.pair_wise_optimization">
+  <component name="RunManager" selected="Python.ft">
     <configuration name="ft" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="scar" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -72,7 +76,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="image_difference_test" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="image_difference_generate_training" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="scar" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -84,7 +88,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/image_difference_test.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/image_difference_generate_training.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -114,6 +118,27 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="option" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="scar" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/option.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="pair_wise_optimization" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="scar" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -135,34 +160,13 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="test_single" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="scar" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/test_single.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.pair_wise_optimization" />
         <item itemvalue="Python.ft" />
+        <item itemvalue="Python.image_difference_generate_training" />
         <item itemvalue="Python.make_pair_dataset" />
-        <item itemvalue="Python.image_difference_test" />
-        <item itemvalue="Python.test_single" />
+        <item itemvalue="Python.option" />
+        <item itemvalue="Python.pair_wise_optimization" />
       </list>
     </recent_temporary>
   </component>
@@ -178,26 +182,26 @@
     <servers />
   </component>
   <component name="WindowStateProjectService">
-    <state x="743" y="278" width="424" height="484" key="FileChooserDialogImpl" timestamp="1601496249840">
+    <state x="743" y="278" width="424" height="484" key="FileChooserDialogImpl" timestamp="1602199738898">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state x="743" y="278" width="424" height="484" key="FileChooserDialogImpl/0.27.1920.988@0.27.1920.988" timestamp="1601496249840" />
-    <state width="1893" height="671" key="GridCell.Tab.0.bottom" timestamp="1601504648547">
+    <state x="743" y="278" width="424" height="484" key="FileChooserDialogImpl/0.27.1920.988@0.27.1920.988" timestamp="1602199738898" />
+    <state width="1893" height="145" key="GridCell.Tab.0.bottom" timestamp="1602349732302">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state width="1893" height="671" key="GridCell.Tab.0.bottom/0.27.1920.988@0.27.1920.988" timestamp="1601504648547" />
-    <state width="1893" height="671" key="GridCell.Tab.0.center" timestamp="1601504648547">
+    <state width="1893" height="145" key="GridCell.Tab.0.bottom/0.27.1920.988@0.27.1920.988" timestamp="1602349732302" />
+    <state width="1893" height="145" key="GridCell.Tab.0.center" timestamp="1602349732301">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state width="1893" height="671" key="GridCell.Tab.0.center/0.27.1920.988@0.27.1920.988" timestamp="1601504648547" />
-    <state width="1893" height="671" key="GridCell.Tab.0.left" timestamp="1601504648547">
+    <state width="1893" height="145" key="GridCell.Tab.0.center/0.27.1920.988@0.27.1920.988" timestamp="1602349732301" />
+    <state width="1893" height="145" key="GridCell.Tab.0.left" timestamp="1602349732301">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state width="1893" height="671" key="GridCell.Tab.0.left/0.27.1920.988@0.27.1920.988" timestamp="1601504648547" />
-    <state width="1893" height="671" key="GridCell.Tab.0.right" timestamp="1601504648547">
+    <state width="1893" height="145" key="GridCell.Tab.0.left/0.27.1920.988@0.27.1920.988" timestamp="1602349732301" />
+    <state width="1893" height="145" key="GridCell.Tab.0.right" timestamp="1602349732301">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state width="1893" height="671" key="GridCell.Tab.0.right/0.27.1920.988@0.27.1920.988" timestamp="1601504648547" />
+    <state width="1893" height="145" key="GridCell.Tab.0.right/0.27.1920.988@0.27.1920.988" timestamp="1602349732301" />
     <state width="1893" height="312" key="GridCell.Tab.1.bottom" timestamp="1600969661286">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
@@ -222,14 +226,18 @@
       <screen x="0" y="27" width="1920" height="988" />
     </state>
     <state width="498" height="449" key="SwitcherDM/0.27.1920.988@0.27.1920.988" timestamp="1601127012152" />
+    <state x="309" y="74" width="1292" height="892" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser" timestamp="1601665950160">
+      <screen x="0" y="27" width="1920" height="988" />
+    </state>
+    <state x="309" y="74" width="1292" height="892" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser/0.27.1920.988@0.27.1920.988" timestamp="1601665950160" />
     <state x="641" y="27" width="732" height="988" key="find.popup" timestamp="1600550631652">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
     <state x="641" y="27" width="732" height="988" key="find.popup/0.27.1920.988@0.27.1920.988" timestamp="1600550631652" />
-    <state x="623" y="241" width="672" height="678" key="search.everywhere.popup" timestamp="1601497105682">
+    <state x="623" y="241" width="672" height="678" key="search.everywhere.popup" timestamp="1602118074330">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state x="623" y="241" width="672" height="678" key="search.everywhere.popup/0.27.1920.988@0.27.1920.988" timestamp="1601497105682" />
+    <state x="623" y="241" width="672" height="678" key="search.everywhere.popup/0.27.1920.988@0.27.1920.988" timestamp="1602118074330" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

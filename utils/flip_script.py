@@ -1,8 +1,8 @@
-import cv2
 import os
 import multiprocessing
 cpu_num = multiprocessing.cpu_count()
-
+from PIL import Image
+import PIL
 
 
 
@@ -29,22 +29,21 @@ def get_all_flip_images(root_path):
         images = []
         all = os.walk(root_path)
         for root, dirs, files in all:
-
-            images += [os.path.join(root,name) for name in files if root.endswith('flip') and is_image_file(name)]
-
+            # images += [os.path.join(root,name) for name in files if root.endswith('flip') and is_image_file(name)]
+            images += [os.path.join(root, name) for name in files if 'flip' in name and is_image_file(name)]
+        print(images)
         return images
     else:
         print("%s_is not a valid path!" %root_path)
 
 
 def flip_images(path):
-    img = cv2.imread(path)
-    flip_img = cv2.flip(img,1)
+    input_image = Image.open(path)
+    out = input_image.transpose(PIL.Image.FLIP_LEFT_RIGHT)
     name = path.split('/')[-1]
     top_dir = os.path.dirname(os.path.dirname(path))
     save_dir = os.path.join(top_dir,name)
-    cv2.imwrite(save_dir,flip_img)
-
+    out.save(save_dir)
 
 
 def flip_all_images(root_path):
@@ -53,4 +52,4 @@ def flip_all_images(root_path):
     with Pool(cpu_num) as p:
         p.map(flip_images,all_flip_images)
 
-flip_all_images('/Users/waihinchan/Desktop/resize_video')
+flip_all_images('../dataset/pair/_0')

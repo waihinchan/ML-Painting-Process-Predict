@@ -72,13 +72,14 @@ class Vgg19(torch.nn.Module):
 
 
 class pixHDversion_perceptual_loss(nn.Module):
-    def __init__(self, gpu_ids):
+    def __init__(self, gpu_ids,loss = nn.MSELoss()):
         super(pixHDversion_perceptual_loss, self).__init__()
         self.vgg = Vgg19()
         if gpu_ids > 0:
             assert(torch.cuda.is_available())
             self.vgg.cuda()
-        self.criterion = nn.L1Loss()
+        self.criterion = loss
+
         self.weights = [1.0/32, 1.0/16, 1.0/8, 1.0/4, 1.0]
         # should be something divided by the element number or something average
 
@@ -91,8 +92,6 @@ class pixHDversion_perceptual_loss(nn.Module):
             loss += self.weights[i] * self.criterion(x_vgg[i], y_vgg[i].detach())
             # y_vgg no require grad
         return loss
-
-
 
 def gram(input):
     (bs, ch, h, w) = input.size()

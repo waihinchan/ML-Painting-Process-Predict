@@ -43,7 +43,7 @@ class ContentLoss(nn.Module):
         return input
     # calculate per pixels difference
 
-from Loss import gram
+from net.loss import gram
 
 
 class StyleLoss(nn.Module):
@@ -69,8 +69,6 @@ class Normalization(nn.Module):
         return (img - self.maen)/self.std
 
 
-
-
 imgsize = 512 if torch.cuda.is_available() else 128
 # use small size if no gpu
 
@@ -81,8 +79,8 @@ loader = transforms.Compose([
 # pre-process pipeline
 
 
-style_img = image_loader("./dataset/style_transfer/1.jpg")
-content_img = image_loader("./dataset/style_transfer/4.jpg")
+style_img = image_loader("/home/waihinchan/Desktop/scar/dataset/style_transfer/1.jpeg")
+content_img = image_loader("/home/waihinchan/Desktop/scar/dataset/style_transfer/5.jpg")
 
 assert style_img.size() == content_img.size(), \
     "we need to import style and content images of the same size"
@@ -108,20 +106,17 @@ class Normalization(nn.Module):
         # normalize img
         return (img - self.mean) / self.std
 
-# input_img = torch.randn(content_img.data.size(), device=device)
-# optimizer = optim.LBFGS([input_img.requires_grad_()])
 optimizer = optim.LBFGS([content_img.requires_grad_()])
 
+from net.loss import Vgg19
+model = Vgg19().cuda()
 
-from Loss import Vgg19
-model = Vgg19()
-print(model)
 
 target_styles = model(style_img)
 # for i in target_styles:
 #     imshow(i)
 now = [0]
-total = 100
+total = 200
 net = []
 
 for sl in target_styles:

@@ -56,8 +56,9 @@ class ResnetBlock(nn.Module):
         return the_output
         # https://www.cnblogs.com/wuliytTaotao/p/9560205.html
 
+# forget what i code here... just copy a new one
 class SpadeResBlock(nn.Module):
-    def __init__(self, ni, nf,opt):
+    def __init__(self, ni, nf, opt):
         super(SpadeResBlock, self).__init__()
         self.spade_bn0 = network.SpadeBN(ni)
         self.conv0 = nn.Conv2d(ni, nf, kernel_size=3, padding=1)
@@ -78,6 +79,6 @@ class SpadeResBlock(nn.Module):
         features = self.conv1(F.relu(self.spade_bn1(features, segmap)))
         return skip_features + features
 
-
+# forget what i code here... just copy a new one
 
 

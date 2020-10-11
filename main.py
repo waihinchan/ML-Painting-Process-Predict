@@ -33,7 +33,6 @@ print_loss = {
 }
 print('start to train')
 for i in range(1,mymodel.opt.epoch):
-
     epoch_start_time = time.time()
     for j, one_video_frames in enumerate(All_videos_frames,start=1):
         # the dataset will return a list of frame from only ONE video
