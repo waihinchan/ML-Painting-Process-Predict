@@ -11,7 +11,7 @@ def ResK(dim, padding_type, norm_layer, activation=nn.ReLU(True), use_dropout=Tr
     :param use_dropout:  default use
     :return: resnetblock class, access the .conv_block to get the Sequential model
     """
-    return ResnetBlock(dim, padding_type, norm_layer, activation=nn.ReLU(True), use_dropout=True)
+    return ResnetBlock(dim, padding_type, norm_layer, activation=activation, use_dropout=use_dropout)
 
 class ResnetBlock(nn.Module):
     def __init__(self,dim, padding_type, norm_layer, activation=nn.ReLU(True), use_dropout=True):

@@ -11,9 +11,16 @@ def create_dataset(opt):
     elif "color" in opt.name:
         from mydataprocess.dataset import colordataset
         mydataset = colordataset(opt)
+
+    # TODO update the name in the future
     elif 'pair' in opt.name:
-        from mydataprocess.dataset import pair_dataset
-        mydataset = pair_dataset(opt)
+        if 'pair' in opt.forward:
+            from mydataprocess.dataset import pair_dataset
+            mydataset = pair_dataset(opt)
+        elif 'seq' in opt.forward:
+            from mydataprocess.dataset import seq_dataset
+            mydataset = seq_dataset(opt)
+    # TODO update the name in the future
     elif 'single' in opt.name:
         from mydataprocess.dataset import single_image
         mydataset = single_image(opt)

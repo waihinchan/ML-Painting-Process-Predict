@@ -155,7 +155,6 @@ class SPADEGenerator(BaseNetwork):
         super().__init__()
         self.opt = opt
         nf = opt.firstK
-
         self.sw, self.sh = self.compute_latent_vector_size(opt)
 
         if opt.use_vae:
@@ -374,7 +373,9 @@ class ConvEncoder(nn.Module):
         pw = int(np.ceil((kw - 1.0) / 2))
         ndf = opt.firstK
         norm_layer = get_nonspade_norm_layer(opt,opt.norm_type)
-        self.layer1 = norm_layer(nn.Conv2d(opt.input_chan*4, ndf, kw, stride=2, padding=pw))
+        input_CH = opt.input_chan*3
+        # current + last + next
+        self.layer1 = norm_layer(nn.Conv2d(input_CH, ndf, kw, stride=2, padding=pw))
         self.layer2 = norm_layer(nn.Conv2d(ndf * 1, ndf * 2, kw, stride=2, padding=pw))
         self.layer3 = norm_layer(nn.Conv2d(ndf * 2, ndf * 4, kw, stride=2, padding=pw))
         self.layer4 = norm_layer(nn.Conv2d(ndf * 4, ndf * 8, kw, stride=2, padding=pw))

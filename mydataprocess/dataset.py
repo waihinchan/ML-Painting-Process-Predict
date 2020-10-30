@@ -9,7 +9,7 @@ from torchvision import transforms
 import re
 import torch
 
-# *************************data process**************************** #
+
 
 
 # **************************data process method**************************
@@ -46,6 +46,10 @@ def plotimage(img,interval = 0.5):
 def loadimg(path):
     return Image.open(path).convert('RGB')
 
+def __clean_noise(tensor):
+    tensor[tensor<0.5] = 0
+    tensor[tensor >= 0.5] = 1
+    return tensor
 
 def how_to_process(opt,img_size):
     w,h = img_size
@@ -97,167 +101,83 @@ def __make_power_2(img, base, method=Image.BICUBIC):
 
 # **************************data process method**************************
 
-"""
-video dataset
-pipeline -> rescale to the opt.inputimage size -> to tensor
-# not sure need to wash the noisy frames(don't know how to do either)
-every time get the item, according to the opt.total_frame to return the frame num.
-and randomly pick the frame in a Interval
-like we want 1000 frames in total (during 1 batchsize train) and 1 data contains of 5000 frames
-we will split the dataset into 5000 / 1000 block, pick 1 frame at each block
-"""
-
-
-class single_image(data.Dataset):
+class seq_dataset(data.Dataset):
     def __init__(self,opt):
-        super(single_image, self).__init__()
+        super(seq_dataset, self).__init__()
         self.opt = opt
         self.data_root_path = os.path.join(os.getcwd(), "dataset")
-        print("the root dataset path is " + self.data_root_path)
+        print("the root path is " + self.data_root_path)
         self.path = os.path.join(self.data_root_path, opt.name)
-        # ../dataset/video/
         print("the dataset path is " + self.path)
-        self.all_images = sorted([os.path.join(self.path, i) for i in os.listdir(self.path) if is_image_file(os.path.join(self.path, i))])
-        # ../dataset/video/1
-    def __getitem__(self, index):
-        tensor = Image.open(self.all_images[index])
-        pipes = []
-        pipes.append(transforms.Resize(self.opt.input_size))
-        pipes.append(transforms.CenterCrop(self.opt.input_size))
-        pipes.append(transforms.ToTensor())
-        pipe = transforms.Compose(pipes)
-        pipes.append(transforms.Normalize((0.5, 0.5, 0.5),
-                                          (0.5, 0.5, 0.5)))
-        head = pipe(tensor)
-        return head
+        all = os.walk(self.path)
+        # this for storage all the video folder (each folder has many frames)
+        self.all_seq = [os.path.join(self.path,video) for video in os.listdir(self.path) if os.path.isdir(os.path.join(self.path,video))]
 
+        # we will iter and sort the sub folder when __getitem__
+        self.all_seq.sort()
+    def get_one_pairs(self,path,pipe):# this will return a single dict, same like the pair dataset
+        pair_paths = [os.path.join(path, img) for img in os.listdir(path) if is_image_file(img)]        # get all the img
+        pair_paths = sorted(pair_paths)
+        segmap_folder = os.path.dirname(os.path.dirname(pair_paths[0])) + '/segmap'  # not sure if this still working
+        frames = [Image.open(img) for img in pair_paths if is_image_file(img) and not 'label' in img and not 'single' in img]
+        if self.opt.use_label:
+            labels = [Image.open(img) for img in pair_paths if is_image_file(img) and 'label' in img ] # this is actually the one-hot
+            segmap_path = [Image.open(img) for img in pair_paths if is_image_file(img) and 'single' in img]
+            full_segmap = [Image.open(os.path.join(segmap_folder, img)) for img in os.listdir(segmap_folder) if is_image_file(img) and 'segmap' in img and not 'single' in img]
+        tensor_list = [i for i in map(pipe, frames)]
+        if self.opt.use_label:
+            label_list = [j for j in map(pipe, labels)]
+            slot = self.opt.label_CH - len(label_list) if self.opt.label_CH - len(label_list) > 0 else 0
+            empty_tensor = torch.zeros_like(tensor_list[0][-1, :, :]).unsqueeze(0)
+            for i in range(slot):
+                label_list.append(empty_tensor)
+            one_hot = torch.cat(label_list)
 
-    def __len__(self):
-        return len(self.all_images)//self.opt.batchSize * self.opt.batchSize
-        # remain to test
+            if len(segmap_path) == 0:
+                segmap = pipe(full_segmap[0])
+            else:
+                segmap = self.get_segmap(segmap_path, pipe)
 
-class step_dataset(data.Dataset):
-    def __init__(self,opt):
-        super(step_dataset, self).__init__()
-        self.opt = opt
-        self.data_root_path = os.path.join(os.getcwd(), "dataset")
-        print("the root dataset path is " + self.data_root_path)
-        self.path = os.path.join(self.data_root_path, opt.name)
-        # ../dataset/video/
-        print("the dataset path is " + self.path)
-        self.dir = sorted([os.path.join(self.path, i) for i in os.listdir(self.path) if os.path.isdir(os.path.join(self.path, i))])
-        # ../dataset/video/1
-        self.opt.bs_total_frames = min(self.opt.bs_total_frames,300)
-        # protect the machine XD
-    def __getitem__(self, index):
-        path = self.dir[index]
-        # ../dataset/video/index
-        all_frames_path = [i for i in os.listdir(path) if is_image_file(i)]
-        all_frames_path.sort(key=lambda x: int(re.match('(\d+)\.', x).group(1)))
-        all_frames_path = [os.path.join(path, i) for i in all_frames_path]
-        # all the full path of each frames are include inside
-        frames = []
+            return {'current': tensor_list[0],
+                    'next': tensor_list[-1],
+                    'last': tensor_list[-2],
+                    'difference': tensor_list[1],
+                    'label': segmap,
+                    'one-hot': one_hot}
+        else:
+            return {'current': tensor_list[0], 'next': tensor_list[-1], 'last': tensor_list[-2],
+                    'difference': tensor_list[1]}
+    def __getitem__(self, index):# this will return a list consist of many dict
+        video = self.all_seq[index]
+        all_pairs = [os.path.join(video,pair) for pair in os.listdir(video) if 'pair' in pair]
+        # all_pairs.sort(key=lambda x: int(re.match('(\d+)', x.split('/')[-1].split('pair')[-1]).group(1)))
+        all_pairs.sort(key=lambda x: int(re.match('(\d+)', x.split('/')[-1].split('pair')[-1].split('to')[0]).group(1)))
 
-        # hard coding
-        for i in range(1,3):
-            frames.append(all_frames_path[i])
-        for j in range(1,3):
-            frames.append(all_frames_path[-(3-i)])
-
-        frames = [Image.open(frame) for frame in frames]
+        # dataset/pair/00001/_00010pair159
+        # split the / and take _00010pair159
+        # split the pair and take the 159
         pipes = []
         pipes.append(transforms.Resize(self.opt.input_size))
         pipes.append(transforms.ToTensor())
-        # pipes.append(transforms.Normalize((0.5, 0.5, 0.5),
-        #                                   (0.5, 0.5, 0.5)))
-
-
         pipe = transforms.Compose(pipes)
-        tensor_list = [i for i in map(pipe,frames)]
-
-        last_frame = pipe(Image.open(all_frames_path[-1]))
-        # not sure the sequence, need a test...
-        return {'frames':tensor_list,'target':last_frame}
-
-
+        # transform pipes
+        return [self.get_one_pairs(single_pair,pipe) for single_pair in all_pairs]
+    def get_segmap(self,index_list,pipe):
+        index_tensor_list = [i for i in map(pipe,index_list)]
+        segmap = torch.cat(index_tensor_list)
+        segmap_ = torch.sum(segmap,0,keepdim=True)
+        return segmap_
     def __len__(self):
-        return len(self.dir)//self.opt.batchSize * self.opt.batchSize
-        # remain to test
+        return len(self.all_seq)//self.opt.batchSize * self.opt.batchSize
 
-class video_dataset(data.Dataset):
-    def __init__(self,opt):
-        super(video_dataset, self).__init__()
-        self.opt = opt
-        self.data_root_path = os.path.join(os.getcwd(), "dataset")
-        print("the root dataset path is " + self.data_root_path)
-        self.path = os.path.join(self.data_root_path, opt.name)
-        # ../dataset/video/
-        print("the dataset path is " + self.path)
-        self.dir = sorted([os.path.join(self.path, i) for i in os.listdir(self.path) if os.path.isdir(os.path.join(self.path, i))])
-        # ../dataset/video/1
-        self.opt.bs_total_frames = min(self.opt.bs_total_frames,300)
-        # protect the machine XD
-    def __getitem__(self, index):
-        path = self.dir[index]
-        # ../dataset/video/index
-        all_frames_path = [i for i in os.listdir(path) if is_image_file(i)]
-        all_frames_path.sort(key=lambda x: int(re.match('(\d+)\.', x).group(1)))
-        all_frames_path = [os.path.join(path, i) for i in all_frames_path]
-
-        # all the full path of each frames are include inside
-
-        # randomly pick the frame
-        frames = []
-        if self.opt.bs_total_frames>=len(all_frames_path):
-            mult = int(np.ceil(self.opt.bs_total_frames / len(all_frames_path)))
-            # remain to test
-            for _ in range(mult):
-                all_frames_path += all_frames_path
-            frames = sorted(all_frames_path)
-
-        block = len(all_frames_path)//self.opt.bs_total_frames
-        for i in range(0,len(all_frames_path),block):
-            # if self.opt.shuffle_each_time:
-            #     pick_index = min(i+random.randint(0,block),len(all_frames_path)-1)
-            # else:
-            pick_index = min(i+block//2,len(all_frames_path)-1)
-            # pick each block middle or first or last?
-            frames.append(all_frames_path[pick_index])
-        # randomly pick the frame
-        # build the pre-process pipie line
-        # as i already resize the frames. so only need a to tensor
-        frames = [Image.open(frame) for frame in frames]
-        pipes = []
-        pipes.append(transforms.Resize(self.opt.input_size))
-
-        pipes.append(transforms.ToTensor())
-        # pipes.append(transforms.Normalize((0.5, 0.5, 0.5),
-        #                                   (0.5, 0.5, 0.5)))
-
-
-        pipe = transforms.Compose(pipes)
-        tensor_list = [i for i in map(pipe,frames)]
-
-        last_frame = pipe(Image.open(all_frames_path[-1]))
-        # not sure the sequence, need a test...
-        return {'frames':tensor_list,'target':last_frame}
-
-
-    def __len__(self):
-        return len(self.dir)//self.opt.batchSize * self.opt.batchSize
-        # remain to test
 
 class pair_dataset(data.Dataset):
     def __init__(self,opt):
         super(pair_dataset, self).__init__()
         self.opt = opt
         self.data_root_path = os.path.join(os.getcwd(), "dataset")
-
         print("the root path is " + self.data_root_path)
-
         self.path = os.path.join(self.data_root_path, opt.name)
-        # ./dataset/datasetname/
-        # this willreturn the full path of each image
         print("the dataset path is " + self.path)
         all = os.walk(self.path)
         all_pairs = []
@@ -265,34 +185,70 @@ class pair_dataset(data.Dataset):
             for dir in dirs:
                 if 'pair' in dir:
                     all_pairs.append(os.path.join(root, dir))
-        self.all_pairs = sorted(all_pairs)
+        self.all_pairs = all_pairs
+        self.all_pairs.sort(key=lambda x: int(re.match('(\d+)', x.split('/')[-1].split('pair')[-1]).group(1)))
 
 
     def __getitem__(self, index):
+        return_list = {'current': None, 'last': None,'next':None}
+        # ************************* this is the fixed stuff need to be return ************************* #
+
         pair_paths = [os.path.join(self.all_pairs[index],img) for img in os.listdir(self.all_pairs[index])]
         pair_paths = sorted(pair_paths)
-        frames = [Image.open(img) for img in pair_paths]
+        frames = [Image.open(img) for img in pair_paths if is_image_file(img) and not 'label' in img and not 'single' in img]
+        # ************************* all the pair folder ************************* #
+
+        segmap_folder = os.path.dirname(os.path.dirname(pair_paths[0])) + '/segmap' if self.opt.use_label else None # TODO remake the dataset name in the future
+        # ************************* the segmaps folder ************************* #
+
+        if self.opt.use_label:
+            segmap_path = [Image.open(img) for img in pair_paths if is_image_file(img) and 'single' in img]
+            # in case of if we specify a certain label map, generally are different parts of the full segmap
+            full_segmap = [Image.open(os.path.join(segmap_folder, img)) for img in os.listdir(segmap_folder) if is_image_file(img) and not 'singlesegmap' in img]
+            # if didn't specify a certain label map. the dataset will return the full segmap
+        # ************************* get the label map ************************* #
+
+        if self.opt.use_degree == 'wrt_position':
+            assert len(frames)>=4,'if use degree base on position, please specify a difference image,the current frames dataset is less than 3 (current and last frames are necessary input)'
+            single_labels = [Image.open(os.path.join(segmap_folder, img)) for img in os.listdir(segmap_folder) if is_image_file(img) if is_image_file(img) and 'label' in img and not 'segmap' in img ]
+        # ************************* get the one-hot label map ************************* #
+
         pipes = []
         pipes.append(transforms.Resize(self.opt.input_size))
-        # pipes.append(transforms.CenterCrop(self.opt.input_size))
         pipes.append(transforms.ToTensor())
-        # pipes.append(transforms.Normalize((0.5, 0.5, 0.5),
-        #                                   (0.5, 0.5, 0.5)))
-        # not sure should use this... if use this the difference will dissappear.. but should be in the data not the tensor
+        # pipes.append(transforms.Normalize((0.5, 0.5, 0.5),(0.5, 0.5, 0.5)))
+        # not sure should use this... if use this the difference will dissappear..
         pipe = transforms.Compose(pipes)
-        tensor_list = [i for i in map(pipe,frames)]
-        # TODO: will get rid of this in the future
-        label = tensor_list[-2][0:3,:,:]
-        # label[label==0] = 1
-        label[label > 0] = 1
-        label = label[-1:,:,:]
-        return {'current':tensor_list[0],'next':tensor_list[1],'last':tensor_list[-1],'difference':tensor_list[2],'label':label}
-        # return {'current':tensor_list[0],'last':tensor_list[-1],'difference':tensor_list[2],'next':tensor_list[1]}
+        # ***************************  transform pipes ***************************
 
+        frames_list = [i for i in map(pipe,frames)]
+        return_list['current'] = frames_list[0]
+        return_list['next'] = frames_list[-1]
+        return_list['last'] = frames_list[-2]
+        if self.opt.use_difference:
+            return_list['difference'] = frames_list[1]
+        # if use wireframe, generally it's generated from another generator..,no given by the dataset
+        if self.opt.use_label:
+            if len(segmap_path) == 0:
+                segmap = pipe(full_segmap[0])
+            else:
+                segmap = self.get_segmap(segmap_path,pipe)
+            return_list['label'] = segmap
+        if self.opt.use_degree == 'wrt_position':
+            label_pipes = []
+            label_pipes.append(transforms.ToTensor())
+            label_pipes.append(transforms.Lambda(lambda img: __clean_noise(img)))
+            label_pipes.append(transforms.Resize(self.opt.input_size))
+            label_pipe = transforms.Compose(pipes)
+            single_label_list = [j for j in map(label_pipe, single_labels)]
+            return_list['segmaps'] = single_label_list # this is list for caculate the degree
+        # *************************** make the return list ***************************
 
-
+        return return_list
     def __len__(self):
         return len(self.all_pairs) // self.opt.batchSize * self.opt.batchSize
+
+
 
 # this is for the color to sketch dataset
 class colordataset(data.Dataset):
@@ -300,9 +256,7 @@ class colordataset(data.Dataset):
         super(colordataset, self).__init__()
         self.opt = opt
         self.data_root_path = os.path.join(os.getcwd(), "dataset")
-
         print("the root path is " + self.data_root_path)
-
         self.path = os.path.join(self.data_root_path, opt.name)
         self.path = self.path + '/train'
         # ./dataset/datasetname/train
@@ -325,7 +279,7 @@ class colordataset(data.Dataset):
 
     def __len__(self):
         return len(self.dir) // self.opt.batchSize * self.opt.batchSize
-# this is for the color to sketch dataset
+
 
 
 

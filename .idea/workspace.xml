@@ -5,9 +5,6 @@
       <change afterPath="$PROJECT_DIR$/../vid2vid/.idea/vid2vid.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../SPADE/models/networks/encoder.py" beforeDir="false" afterPath="$PROJECT_DIR$/../SPADE/models/networks/encoder.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../SPADE/models/networks/generator.py" beforeDir="false" afterPath="$PROJECT_DIR$/../SPADE/models/networks/generator.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/scar.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/scar.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ft.py" beforeDir="false" afterPath="$PROJECT_DIR$/ft.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/image_difference_generate_training.py" beforeDir="false" afterPath="$PROJECT_DIR$/image_difference_generate_training.py" afterDir="false" />
@@ -19,11 +16,6 @@
       <change beforePath="$PROJECT_DIR$/net/model.py" beforeDir="false" afterPath="$PROJECT_DIR$/net/model.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/net/resnet.py" beforeDir="false" afterPath="$PROJECT_DIR$/net/resnet.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/option.py" beforeDir="false" afterPath="$PROJECT_DIR$/option.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/train_single_frame_model.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/train_style_sketch_model.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/fast_check_result.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/fast_check_result.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/make_pair_dataset.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/make_pair_dataset.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -53,7 +45,7 @@
     <property name="last_opened_file_path" value="$PROJECT_DIR$/../LSTM-master" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
-  <component name="RunManager" selected="Python.ft">
+  <component name="RunManager" selected="Python.main">
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
       <module name="LSTM-master" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -257,8 +249,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.ft" />
         <item itemvalue="Python.main" />
+        <item itemvalue="Python.ft" />
         <item itemvalue="Python.generator" />
         <item itemvalue="Python.make_pair_dataset" />
         <item itemvalue="Python.test (1)" />
@@ -285,22 +277,22 @@
       <screen x="0" y="27" width="1920" height="988" />
     </state>
     <state x="743" y="278" width="424" height="484" key="FileChooserDialogImpl/0.27.1920.988@0.27.1920.988" timestamp="1603636185547" />
-    <state width="1893" height="204" key="GridCell.Tab.0.bottom" timestamp="1604068333977">
+    <state width="1893" height="212" key="GridCell.Tab.0.bottom" timestamp="1604076504061">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state width="1893" height="204" key="GridCell.Tab.0.bottom/0.27.1920.988@0.27.1920.988" timestamp="1604068333977" />
-    <state width="1893" height="204" key="GridCell.Tab.0.center" timestamp="1604068333977">
+    <state width="1893" height="212" key="GridCell.Tab.0.bottom/0.27.1920.988@0.27.1920.988" timestamp="1604076504061" />
+    <state width="1893" height="212" key="GridCell.Tab.0.center" timestamp="1604076504060">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state width="1893" height="204" key="GridCell.Tab.0.center/0.27.1920.988@0.27.1920.988" timestamp="1604068333977" />
-    <state width="1893" height="204" key="GridCell.Tab.0.left" timestamp="1604068333976">
+    <state width="1893" height="212" key="GridCell.Tab.0.center/0.27.1920.988@0.27.1920.988" timestamp="1604076504060" />
+    <state width="1893" height="212" key="GridCell.Tab.0.left" timestamp="1604076504059">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state width="1893" height="204" key="GridCell.Tab.0.left/0.27.1920.988@0.27.1920.988" timestamp="1604068333976" />
-    <state width="1893" height="204" key="GridCell.Tab.0.right" timestamp="1604068333977">
+    <state width="1893" height="212" key="GridCell.Tab.0.left/0.27.1920.988@0.27.1920.988" timestamp="1604076504059" />
+    <state width="1893" height="212" key="GridCell.Tab.0.right" timestamp="1604076504060">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state width="1893" height="204" key="GridCell.Tab.0.right/0.27.1920.988@0.27.1920.988" timestamp="1604068333977" />
+    <state width="1893" height="212" key="GridCell.Tab.0.right/0.27.1920.988@0.27.1920.988" timestamp="1604076504060" />
     <state width="1893" height="313" key="GridCell.Tab.1.bottom" timestamp="1603399584863">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
