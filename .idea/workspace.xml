@@ -10,20 +10,19 @@
       <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ft.py" beforeDir="false" afterPath="$PROJECT_DIR$/ft.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/image_difference_generate_training.py" beforeDir="false" afterPath="$PROJECT_DIR$/image_difference_generate_training.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mydataprocess/dataset.py" beforeDir="false" afterPath="$PROJECT_DIR$/mydataprocess/dataset.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/mydataprocess/mydataloader.py" beforeDir="false" afterPath="$PROJECT_DIR$/mydataprocess/mydataloader.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/net/discriminator.py" beforeDir="false" afterPath="$PROJECT_DIR$/net/discriminator.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/net/SPADE.py" beforeDir="false" afterPath="$PROJECT_DIR$/net/SPADE.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/net/generator.py" beforeDir="false" afterPath="$PROJECT_DIR$/net/generator.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/net/loss.py" beforeDir="false" afterPath="$PROJECT_DIR$/net/loss.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/net/model.py" beforeDir="false" afterPath="$PROJECT_DIR$/net/model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/net/network.py" beforeDir="false" afterPath="$PROJECT_DIR$/net/network.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/net/resnet.py" beforeDir="false" afterPath="$PROJECT_DIR$/net/resnet.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/option.py" beforeDir="false" afterPath="$PROJECT_DIR$/option.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/others/Neural_Style_algorithm.py" beforeDir="false" afterPath="$PROJECT_DIR$/others/Neural_Style_algorithm.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/result/result.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/train_single_frame_model.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/train_style_sketch_model.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/utils/fast_check_result.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/fast_check_result.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/flip_script.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/flip_script.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/utils/make_pair_dataset.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/make_pair_dataset.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -51,10 +50,31 @@
     <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../vid2vid" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../LSTM-master" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RunManager" selected="Python.ft">
+    <configuration default="true" type="PythonConfigurationType" factoryName="Python">
+      <module name="LSTM-master" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="ft" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="scar" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -76,7 +96,28 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="image_difference_generate_training" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="generator" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="scar" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/net" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/net/generator.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="scar" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -88,7 +129,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/image_difference_generate_training.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/main.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -118,7 +159,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="option" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="test (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="scar" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -130,7 +171,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/option.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/test.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -139,34 +180,88 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="pair_wise_optimization" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="scar" />
+    <configuration default="true" type="Tox" factoryName="Tox">
+      <module name="LSTM-master" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/pair_wise_optimization.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="docs" factoryName="Docutils task">
+      <module name="LSTM-master" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="docutils_input_file" value="" />
+      <option name="docutils_output_file" value="" />
+      <option name="docutils_params" value="" />
+      <option name="docutils_task" value="" />
+      <option name="docutils_open_in_browser" value="false" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="docs" factoryName="Sphinx task">
+      <module name="LSTM-master" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="docutils_input_file" value="" />
+      <option name="docutils_output_file" value="" />
+      <option name="docutils_params" value="" />
+      <option name="docutils_task" value="" />
+      <option name="docutils_open_in_browser" value="false" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="tests" factoryName="Doctests">
+      <module name="LSTM-master" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="" />
+      <option name="CLASS_NAME" value="" />
+      <option name="METHOD_NAME" value="" />
+      <option name="FOLDER_NAME" value="" />
+      <option name="TEST_TYPE" value="TEST_SCRIPT" />
+      <option name="PATTERN" value="" />
+      <option name="USE_PATTERN" value="false" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="tests" factoryName="Unittests">
+      <module name="LSTM-master" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;&quot;" />
+      <option name="_new_targetType" value="&quot;PATH&quot;" />
       <method v="2" />
     </configuration>
     <recent_temporary>
       <list>
         <item itemvalue="Python.ft" />
-        <item itemvalue="Python.image_difference_generate_training" />
+        <item itemvalue="Python.main" />
+        <item itemvalue="Python.generator" />
         <item itemvalue="Python.make_pair_dataset" />
-        <item itemvalue="Python.option" />
-        <item itemvalue="Python.pair_wise_optimization" />
+        <item itemvalue="Python.test (1)" />
       </list>
     </recent_temporary>
   </component>
@@ -182,42 +277,46 @@
     <servers />
   </component>
   <component name="WindowStateProjectService">
-    <state x="743" y="278" width="424" height="484" key="FileChooserDialogImpl" timestamp="1602199738898">
+    <state x="649" y="313" width="611" height="414" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1603042054157">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state x="743" y="278" width="424" height="484" key="FileChooserDialogImpl/0.27.1920.988@0.27.1920.988" timestamp="1602199738898" />
-    <state width="1893" height="145" key="GridCell.Tab.0.bottom" timestamp="1602349732302">
+    <state x="649" y="313" width="611" height="414" key="#com.intellij.fileTypes.FileTypeChooser/0.27.1920.988@0.27.1920.988" timestamp="1603042054157" />
+    <state x="743" y="278" width="424" height="484" key="FileChooserDialogImpl" timestamp="1603636185547">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state width="1893" height="145" key="GridCell.Tab.0.bottom/0.27.1920.988@0.27.1920.988" timestamp="1602349732302" />
-    <state width="1893" height="145" key="GridCell.Tab.0.center" timestamp="1602349732301">
+    <state x="743" y="278" width="424" height="484" key="FileChooserDialogImpl/0.27.1920.988@0.27.1920.988" timestamp="1603636185547" />
+    <state width="1893" height="204" key="GridCell.Tab.0.bottom" timestamp="1604068333977">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state width="1893" height="145" key="GridCell.Tab.0.center/0.27.1920.988@0.27.1920.988" timestamp="1602349732301" />
-    <state width="1893" height="145" key="GridCell.Tab.0.left" timestamp="1602349732301">
+    <state width="1893" height="204" key="GridCell.Tab.0.bottom/0.27.1920.988@0.27.1920.988" timestamp="1604068333977" />
+    <state width="1893" height="204" key="GridCell.Tab.0.center" timestamp="1604068333977">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state width="1893" height="145" key="GridCell.Tab.0.left/0.27.1920.988@0.27.1920.988" timestamp="1602349732301" />
-    <state width="1893" height="145" key="GridCell.Tab.0.right" timestamp="1602349732301">
+    <state width="1893" height="204" key="GridCell.Tab.0.center/0.27.1920.988@0.27.1920.988" timestamp="1604068333977" />
+    <state width="1893" height="204" key="GridCell.Tab.0.left" timestamp="1604068333976">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state width="1893" height="145" key="GridCell.Tab.0.right/0.27.1920.988@0.27.1920.988" timestamp="1602349732301" />
-    <state width="1893" height="312" key="GridCell.Tab.1.bottom" timestamp="1600969661286">
+    <state width="1893" height="204" key="GridCell.Tab.0.left/0.27.1920.988@0.27.1920.988" timestamp="1604068333976" />
+    <state width="1893" height="204" key="GridCell.Tab.0.right" timestamp="1604068333977">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state width="1893" height="312" key="GridCell.Tab.1.bottom/0.27.1920.988@0.27.1920.988" timestamp="1600969661286" />
-    <state width="1893" height="312" key="GridCell.Tab.1.center" timestamp="1600969661286">
+    <state width="1893" height="204" key="GridCell.Tab.0.right/0.27.1920.988@0.27.1920.988" timestamp="1604068333977" />
+    <state width="1893" height="313" key="GridCell.Tab.1.bottom" timestamp="1603399584863">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state width="1893" height="312" key="GridCell.Tab.1.center/0.27.1920.988@0.27.1920.988" timestamp="1600969661286" />
-    <state width="1893" height="312" key="GridCell.Tab.1.left" timestamp="1600969661286">
+    <state width="1893" height="313" key="GridCell.Tab.1.bottom/0.27.1920.988@0.27.1920.988" timestamp="1603399584863" />
+    <state width="1893" height="313" key="GridCell.Tab.1.center" timestamp="1603399584863">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state width="1893" height="312" key="GridCell.Tab.1.left/0.27.1920.988@0.27.1920.988" timestamp="1600969661286" />
-    <state width="1893" height="312" key="GridCell.Tab.1.right" timestamp="1600969661286">
+    <state width="1893" height="313" key="GridCell.Tab.1.center/0.27.1920.988@0.27.1920.988" timestamp="1603399584863" />
+    <state width="1893" height="313" key="GridCell.Tab.1.left" timestamp="1603399584863">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state width="1893" height="312" key="GridCell.Tab.1.right/0.27.1920.988@0.27.1920.988" timestamp="1600969661286" />
+    <state width="1893" height="313" key="GridCell.Tab.1.left/0.27.1920.988@0.27.1920.988" timestamp="1603399584863" />
+    <state width="1893" height="313" key="GridCell.Tab.1.right" timestamp="1603399584863">
+      <screen x="0" y="27" width="1920" height="988" />
+    </state>
+    <state width="1893" height="313" key="GridCell.Tab.1.right/0.27.1920.988@0.27.1920.988" timestamp="1603399584863" />
     <state x="534" y="131" width="1037" height="768" key="SettingsEditor" timestamp="1600618146910">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
@@ -226,28 +325,17 @@
       <screen x="0" y="27" width="1920" height="988" />
     </state>
     <state width="498" height="449" key="SwitcherDM/0.27.1920.988@0.27.1920.988" timestamp="1601127012152" />
-    <state x="309" y="74" width="1292" height="892" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser" timestamp="1601665950160">
+    <state x="309" y="74" width="1292" height="892" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser" timestamp="1603831488213">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state x="309" y="74" width="1292" height="892" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser/0.27.1920.988@0.27.1920.988" timestamp="1601665950160" />
-    <state x="641" y="27" width="732" height="988" key="find.popup" timestamp="1600550631652">
+    <state x="309" y="74" width="1292" height="892" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser/0.27.1920.988@0.27.1920.988" timestamp="1603831488213" />
+    <state x="641" y="27" width="732" height="988" key="find.popup" timestamp="1603311480418">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state x="641" y="27" width="732" height="988" key="find.popup/0.27.1920.988@0.27.1920.988" timestamp="1600550631652" />
-    <state x="623" y="241" width="672" height="678" key="search.everywhere.popup" timestamp="1602118074330">
+    <state x="641" y="27" width="732" height="988" key="find.popup/0.27.1920.988@0.27.1920.988" timestamp="1603311480418" />
+    <state x="623" y="241" width="672" height="678" key="search.everywhere.popup" timestamp="1603399564059">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state x="623" y="241" width="672" height="678" key="search.everywhere.popup/0.27.1920.988@0.27.1920.988" timestamp="1602118074330" />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/../SPADE/models/networks/generator.py</url>
-          <line>5</line>
-          <option name="timeStamp" value="3" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
+    <state x="623" y="241" width="672" height="678" key="search.everywhere.popup/0.27.1920.988@0.27.1920.988" timestamp="1603399564059" />
   </component>
 </project>

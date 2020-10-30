@@ -8,16 +8,13 @@ def imsave(tensor,index,dir = './result/video_result/'):
     # image = torch.clamp(image,0,1)
     image = unloader(image)
     image.save( dir+ str(index) + '.jpg')
-
-def grabdata(opt,path):
+import numpy as np
+def grabdata(path,opt=None):
+    input_size = 256 if opt == None else opt.input_size
     input_image = Image.open(path)
     pipe = []
-    pipe.append(transforms.Resize(opt.input_size))
+    # pipe.append(transforms.Resize(input_size))
     pipe.append(transforms.ToTensor())
-
-    # pipe.append(transforms.Normalize((0.5, 0.5, 0.5),
-    #                                   (0.5, 0.5, 0.5)))
     pipe = transforms.Compose(pipe)
     image = pipe(input_image)
-
     return image.unsqueeze(0)
