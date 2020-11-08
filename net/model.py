@@ -207,7 +207,7 @@ class SCAR(model_wrapper):
             # the cat input will be current + next + last + full_label_map + edge + degree + labelCH(if degree is None or time)
             self.netD = net.discriminator.patchGAN(netD_inputchan).to(self.device)
             self.netD.apply(init_weights)
-            netD_inputchan_seq = netD_inputchan * opt.n_past_frames
+            netD_inputchan_seq = opt.output_channel * opt.n_past_frames
             self.netD_seq = net.discriminator.patchGAN(netD_inputchan_seq).to(self.device)
             self.netD_seq.apply(init_weights)
             pretrain_path = '' if self.opt.mode == 'train' else self.save_dir
@@ -356,20 +356,20 @@ class SCAR(model_wrapper):
             dis_fake_seq_ = self.netD_seq(cat_fakes)
             GAN_Loss_seq = self.GANloss(dis_fake_seq_,True) * self.opt.GAN_lambda / self.opt.n_past_frames  # should * 1/n-past-frame?
             # compute the D_seq_loss
-            loss['D_Loss'] += D_seq_loss
-            loss['G_Loss'] += GAN_Loss_seq
+            loss['D_loss'] += D_seq_loss
+            loss['G_loss'] += GAN_Loss_seq
             acc_loss.append(loss)  # we will compute the loss at last
         # combine the loss
         loss_dict = {'G_Loss': 0,
                      'D_Loss': 0,
-                     'VGG_Loss': 0,
-                     'L1_Loss': 0
+                    #  'VGG_Loss': 0,
+                    #  'L1_Loss': 0
                      }
         for _ in acc_loss:  # all the pair loss are inside
-            loss_dict['G_Loss'] += _['G_Loss']
-            loss_dict['D_Loss'] += _['D_Loss']
-            loss_dict['VGG_Loss'] += _['VGG_Loss']
-            loss_dict['L1_Loss'] += _['L1_Loss']
+            loss_dict['G_Loss'] += _['G_loss']
+            loss_dict['D_Loss'] += _['D_loss']
+            # loss_dict['VGG_Loss'] += _['VGG_Loss']
+            # loss_dict['L1_Loss'] += _['L1_Loss']
         # combine the loss
 
     def pair_optimize(self, input):
@@ -403,11 +403,11 @@ class SCAR(model_wrapper):
             fast_check_result.imsave(input_['next'][-1,:,:,:],index=result_label+'real',dir='./result/result_preview/')
             fast_check_result.imsave(fake_next[-1,:,:,:],index=result_label+'fake',dir='./result/result_preview/')
             fast_check_result.imsave(input_['current'][-1,:,:,:],index=result_label+'current',dir='./result/result_preview/')
-            if self.opt.use_difference:
-                fast_check_result.imsave(input_['difference'][-1,:,:,:],index=result_label+'difference',dir='./result/result_preview/')
-            if self.opt.use_degree == 'wrt_position':
-                for k in range(self.opt.granularity + 1):
-                    fast_check_result.imsave(input_['degree'][-1, k, :, :], index=result_label + 'degree' + str(k),dir='./result/result_preview/')
+            # if self.opt.use_difference:
+            #     fast_check_result.imsave(input_['difference'][-1,:,:,:],index=result_label+'difference',dir='./result/result_preview/')
+            # if self.opt.use_degree == 'wrt_position':
+            #     for k in range(self.opt.granularity + 1):
+            #         fast_check_result.imsave(input_['degree'][-1, k, :, :], index=result_label + 'degree' + str(k),dir='./result/result_preview/')
 
         return {
             'G_loss':G_Loss,

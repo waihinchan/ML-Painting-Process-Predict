@@ -122,10 +122,7 @@
 #     print('Done')
 #
 # make_pair_dataset('../dataset/pair',total_frame = 130,single_CH=False,use_label=False )
-#
-# # 先不管说label的问题（所以这次是要手动）
-# # 首先lastframe 肯定是最后一帧 毋庸置疑
-# # 然后step是需要变化的 所以不能直接。。
+
 
 import os
 import re
@@ -161,15 +158,16 @@ def get_all_image(folders,use_label=None):
     images = []
     for folder in folders: # all images folders
         temp = []
-        for image in os.listdir(folder):
-            if is_image_file(image):
-                temp.append(os.path.join(folder,image))
-            elif 'seg' in image:
-                segmap_path = os.path.join(folder,image)
-        if use_label is not None:
-            assert (segmap_path is not None),'if use label please assign a label_map_folder'
-        temp = [(temp,segmap_path)] if use_label else [temp]
-        images += temp
+        if not '.DS_Store' in folder:
+          for image in os.listdir(folder):
+              if is_image_file(image):
+                  temp.append(os.path.join(folder,image))
+              elif 'seg' in image:
+                  segmap_path = os.path.join(folder,image)
+          if use_label is not None:
+              assert (segmap_path is not None),'if use label please assign a label_map_folder'
+          temp = [(temp,segmap_path)] if use_label else [temp]
+          images += temp
     return images
 
 

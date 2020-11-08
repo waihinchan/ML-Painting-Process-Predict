@@ -115,38 +115,62 @@ class seq_dataset(data.Dataset):
 
         # we will iter and sort the sub folder when __getitem__
         self.all_seq.sort()
-    def get_one_pairs(self,path,pipe):# this will return a single dict, same like the pair dataset
+    def get_one_pairs(self,path):# this will return a single dict, same like the pair dataset
+
+        return_list = {'current': None, 'last': None,'next':None}
+        # ************************* this is the fixed stuff need to be return ************************* #
         pair_paths = [os.path.join(path, img) for img in os.listdir(path) if is_image_file(img)]        # get all the img
         pair_paths = sorted(pair_paths)
-        segmap_folder = os.path.dirname(os.path.dirname(pair_paths[0])) + '/segmap'  # not sure if this still working
         frames = [Image.open(img) for img in pair_paths if is_image_file(img) and not 'label' in img and not 'single' in img]
-        if self.opt.use_label:
-            labels = [Image.open(img) for img in pair_paths if is_image_file(img) and 'label' in img ] # this is actually the one-hot
-            segmap_path = [Image.open(img) for img in pair_paths if is_image_file(img) and 'single' in img]
-            full_segmap = [Image.open(os.path.join(segmap_folder, img)) for img in os.listdir(segmap_folder) if is_image_file(img) and 'segmap' in img and not 'single' in img]
-        tensor_list = [i for i in map(pipe, frames)]
-        if self.opt.use_label:
-            label_list = [j for j in map(pipe, labels)]
-            slot = self.opt.label_CH - len(label_list) if self.opt.label_CH - len(label_list) > 0 else 0
-            empty_tensor = torch.zeros_like(tensor_list[0][-1, :, :]).unsqueeze(0)
-            for i in range(slot):
-                label_list.append(empty_tensor)
-            one_hot = torch.cat(label_list)
+        # ************************* all the pair folder ************************* #
+        segmap_folder = os.path.dirname(os.path.dirname(pair_paths[0])) + '/segmap'  # not sure if this still working
 
+        # ************************* the segmaps folder ************************* #
+
+        if self.opt.use_label:
+            segmap_path = [Image.open(img) for img in pair_paths if is_image_file(img) and 'single' in img]
+            # in case of if we specify a certain label map, generally are different parts of the full segmap
+            full_segmap = [Image.open(os.path.join(segmap_folder, img)) for img in os.listdir(segmap_folder) if is_image_file(img) and not 'singlesegmap' in img]
+            # if didn't specify a certain label map. the dataset will return the full segmap
+        # ************************* get the label map ************************* #
+
+        if self.opt.use_degree == 'wrt_position':
+            assert len(frames)>=4,'if use degree base on position, please specify a difference image,the current frames dataset is less than 3 (current and last frames are necessary input)'
+            single_labels = [Image.open(os.path.join(segmap_folder, img)) for img in os.listdir(segmap_folder) if is_image_file(img) if is_image_file(img) and 'label' in img and not 'segmap' in img ]
+        # ************************* get the one-hot label map ************************* #
+
+        pipes = []
+        pipes.append(transforms.Resize(self.opt.input_size))
+        pipes.append(transforms.ToTensor())
+        # pipes.append(transforms.Normalize((0.5, 0.5, 0.5),(0.5, 0.5, 0.5)))
+        # not sure should use this... if use this the difference will dissappear..
+        pipe = transforms.Compose(pipes)
+        # ***************************  transform pipes ***************************
+
+        frames_list = [i for i in map(pipe,frames)]
+        return_list['current'] = frames_list[0]
+        return_list['next'] = frames_list[-1]
+        return_list['last'] = frames_list[-2]
+        if self.opt.use_difference:
+            return_list['difference'] = frames_list[1]
+        # if use wireframe, generally it's generated from another generator..,no given by the dataset
+        if self.opt.use_label:
             if len(segmap_path) == 0:
                 segmap = pipe(full_segmap[0])
             else:
-                segmap = self.get_segmap(segmap_path, pipe)
+                segmap = self.get_segmap(segmap_path,pipe)
+            return_list['label'] = segmap
+        if self.opt.use_degree == 'wrt_position':
+            label_pipes = []
+            label_pipes.append(transforms.ToTensor())
+            label_pipes.append(transforms.Lambda(lambda img: __clean_noise(img)))
+            label_pipes.append(transforms.Resize(self.opt.input_size))
+            label_pipe = transforms.Compose(pipes)
+            single_label_list = [j for j in map(label_pipe, single_labels)]
+            return_list['segmaps'] = single_label_list # this is list for caculate the degree
+        # *************************** make the return list ***************************
 
-            return {'current': tensor_list[0],
-                    'next': tensor_list[-1],
-                    'last': tensor_list[-2],
-                    'difference': tensor_list[1],
-                    'label': segmap,
-                    'one-hot': one_hot}
-        else:
-            return {'current': tensor_list[0], 'next': tensor_list[-1], 'last': tensor_list[-2],
-                    'difference': tensor_list[1]}
+        return return_list
     def __getitem__(self, index):# this will return a list consist of many dict
         video = self.all_seq[index]
         all_pairs = [os.path.join(video,pair) for pair in os.listdir(video) if 'pair' in pair]
@@ -156,12 +180,7 @@ class seq_dataset(data.Dataset):
         # dataset/pair/00001/_00010pair159
         # split the / and take _00010pair159
         # split the pair and take the 159
-        pipes = []
-        pipes.append(transforms.Resize(self.opt.input_size))
-        pipes.append(transforms.ToTensor())
-        pipe = transforms.Compose(pipes)
-        # transform pipes
-        return [self.get_one_pairs(single_pair,pipe) for single_pair in all_pairs]
+        return [self.get_one_pairs(single_pair) for single_pair in all_pairs]
     def get_segmap(self,index_list,pipe):
         index_tensor_list = [i for i in map(pipe,index_list)]
         segmap = torch.cat(index_tensor_list)
