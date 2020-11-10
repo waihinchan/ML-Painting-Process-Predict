@@ -26,4 +26,4 @@ pretrain model:
 make sure the dataset format like:
 1.jpg,2.jpg,3.jpg...last,if you have segmap please make a folder and put it in each data
 
-see the demo at:
+see the demo result at:[result1](https://github.com/waihinchan/scar/blob/experient/seq.pdf) [result2](https://github.com/waihinchan/scar/blob/experient/seq2.pdf)
