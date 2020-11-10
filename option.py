@@ -27,7 +27,7 @@ class opt():
         self.num_scale = 3 # this is the multi scale dis, so far we didn't use that
         self.n_blocks = 9 # this is for the resnet block
         self.n_past_frames = 1 # this is meaning less if set to 1
-        self.input_size = 256
+        self.input_size = 128
         self.save_result = False
         self.upsample_num_ = 5 if self.input_size>=256 else 4
         self.n_downsample_global = 4

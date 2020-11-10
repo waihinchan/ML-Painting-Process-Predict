@@ -360,17 +360,18 @@ class SCAR(model_wrapper):
             loss['G_loss'] += GAN_Loss_seq
             acc_loss.append(loss)  # we will compute the loss at last
         # combine the loss
-        loss_dict = {'G_Loss': 0,
-                     'D_Loss': 0,
+        loss_dict = {'G_loss': 0,
+                     'D_loss': 0,
                     #  'VGG_Loss': 0,
                     #  'L1_Loss': 0
                      }
         for _ in acc_loss:  # all the pair loss are inside
-            loss_dict['G_Loss'] += _['G_loss']
-            loss_dict['D_Loss'] += _['D_loss']
+            loss_dict['G_loss'] += _['G_loss']
+            loss_dict['D_loss'] += _['D_loss']
             # loss_dict['VGG_Loss'] += _['VGG_Loss']
             # loss_dict['L1_Loss'] += _['L1_Loss']
         # combine the loss
+        return loss_dict,fake_frames
 
     def pair_optimize(self, input):
         input_ = self.pre_process_input(input)
