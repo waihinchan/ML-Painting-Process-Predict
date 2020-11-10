@@ -174,7 +174,7 @@ def get_all_image(folders,use_label=None):
 # in the dataset making stage, we don't know how much label CH we have,
 # each dataset only has the label they have, so we only save the label
 
-def make_pair_dataset(dataset_dir,use_label='wrt_time',granularity = 3,step=3):
+def make_pair_dataset(dataset_dir,use_label='wrt_time',granularity = 3,step=3,ttframe=30):
     all_folder = get_image_floders(dataset_dir)
     all_images = get_all_image(all_folder,use_label)
 
@@ -200,7 +200,7 @@ def make_pair_dataset(dataset_dir,use_label='wrt_time',granularity = 3,step=3):
         # image_folder.sort(key=lambda x: int(re.match('(\d+)', x.split('/')[-1]).group(1)))
         # TODO: update this sort in the future depend how the dataset format
         image_folder.sort()
-        step_ = 1 if use_label=='wrt_time' else step
+        step_ = 1 if use_label=='wrt_time' else (len(image_folder)//ttframe+1)
         for i in range(0,len(image_folder),step_):
             pair_name = os.path.dirname(image_folder[i])
             mark = pair_name.split('/')[-1]
@@ -221,7 +221,9 @@ def make_pair_dataset(dataset_dir,use_label='wrt_time',granularity = 3,step=3):
                             difference = torch.abs(grabdata(image_folder[i]) - grabdata(image_folder[i + j]))
                             imsave(difference,dir = os.path.join(folder,str(mark)+'difference.jpg'))
             elif use_label == 'wrt_position':
-                index = i + step if i < (len(image_folder)-step) else -1
+                next_step = step_
+                # print(next_step)
+                index = i + next_step if i < (len(image_folder)-next_step) else -1
                 index_ = index if index is not -1 else len(image_folder)
                 # if i < (len(image_folder)-step):
                 folder = os.path.join(pair_name, str(mark) + 'pair' + str(i) + 'to' + str(index_))
@@ -245,7 +247,7 @@ def make_pair_dataset(dataset_dir,use_label='wrt_time',granularity = 3,step=3):
 
     print('Done')
 
-make_pair_dataset('../dataset/pair',use_label='wrt_position',granularity=4,step=5)
+make_pair_dataset('../dataset/pair',use_label='wrt_position',granularity=4,step=1,ttframe=30)
 
 # if use label + wrt_time , i to j
 # if use label + wrt_position, no i to j
