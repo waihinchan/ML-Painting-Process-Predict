@@ -8,9 +8,9 @@ myoption.batchSize = 1 # if we have a batch norm maybe this would still working?
 myoption.name = 'pair'
 myoption.use_degree = 'wrt_position'
 myoption.use_label= True
-myoption.mode = 'continue train'
+myoption.mode = 'train'
 myoption.which_epoch = 150
-myoption.forward = 'seq'
+myoption.forward = 'pair'
 for name,value in vars(myoption).items():
     print('%s=%s' % (name,value))
 dataloader = mydataloader.Dataloader(myoption)
