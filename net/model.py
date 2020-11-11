@@ -329,7 +329,7 @@ class SCAR(model_wrapper):
 
         # ************************** many frames forward ************************** #
         for j, each_frame in enumerate(input, start=0):
-            # print(j) # count if the GPU memory will exceed... CRYING..
+            print(j) # count if the GPU memory will exceed... CRYING..
             real_past_frames[-1] = each_frame['next'].to(self.device)  # every time the real_past_frames will auto update
             if j == 0:  # if is the first time we use the raw blank_frame/1st_frame/whatever given by the dataset
                 loss, fake_next = self.pair_optimize(each_frame)

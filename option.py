@@ -8,7 +8,7 @@ class opt():
     def __init__(self):
         self.learningrate = 0.0002
         self.epoch = 402
-        self.niter_decay = 200
+        self.niter_decay = 300
         self.lsgan = True
         self.mode = "train"
         self.input_chan = 3
