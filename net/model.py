@@ -213,6 +213,8 @@ class SCAR(model_wrapper):
             pretrain_path = '' if self.opt.mode == 'train' else self.save_dir
             self.load_network(self.netD, 'D', opt.which_epoch, pretrain_path)
             self.load_network(self.netG, 'G', opt.which_epoch, pretrain_path)
+            self.load_network(self.netE, 'E', opt.which_epoch, pretrain_path)
+            self.load_network(self.netD_seq, 'D_seq', opt.which_epoch, pretrain_path)
             self.KLDloss = net.loss.KLDLoss()
             self.l1loss = nn.L1Loss()
             self.vggloss = net.loss.pixHDversion_perceptual_loss(opt.gpu_ids)
@@ -362,22 +364,18 @@ class SCAR(model_wrapper):
         # combine the loss
         loss_dict = {'G_loss': 0,
                      'D_loss': 0,
-                    #  'VGG_Loss': 0,
-                    #  'L1_Loss': 0
                      }
         for _ in acc_loss:  # all the pair loss are inside
             loss_dict['G_loss'] += _['G_loss']
             loss_dict['D_loss'] += _['D_loss']
-            # loss_dict['VGG_Loss'] += _['VGG_Loss']
-            # loss_dict['L1_Loss'] += _['L1_Loss']
         # combine the loss
         if self.opt.save_result:
           result_label = str(time.time())
           folder = './result/result_preview/' + result_label
-          if not os.path.isdir('folder'):
-            os.mkdir(folder)
-          for k,_ in enumerate(fake_frames,start=0):
-            fast_check_result.imsave(_[-1,:,:,:],index='fake'+str(k),dir=folder)
+          os.mkdir(folder)
+          for k,save in enumerate(fake_frames,start=0):
+            fast_check_result.imsave(save[-1,:,:,:],index=str(k),dir=folder+'/')
+
         return loss_dict,fake_frames
 
     def pair_optimize(self, input):

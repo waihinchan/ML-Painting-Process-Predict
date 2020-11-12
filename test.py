@@ -8,7 +8,7 @@ if not os.path.isdir('./result/result_preview'):
 myoption = option.opt()
 myoption.batchSize = 1 # if we have a batch norm maybe this would still working?
 myoption.name = 'pair'
-myoption.use_degree = 'wrt_position'
+myoption.use_degree = None
 myoption.use_label= True
 myoption.mode = 'test'
 myoption.which_epoch = 400
@@ -42,9 +42,9 @@ data = {
   'last':last,
   'label':label
 }
-one_hot_list = [grabdata(one_hot,myoption) for one_hot in one_hot_paths]
+one_hot_list = [grabdata(one_hot,myoption) for one_hot in one_hot_paths] if myoption.use_degree is not None else None
 fake_frames = mymodel.inference(data,one_hot_list)
-print(len(fake_frames))
+
 from utils.fast_check_result import imsave
 for i,fake_frame in enumerate(fake_frames,start=1):
   imsave(fake_frame,index =  str(i)+index,dir = './result/result_preview/')
