@@ -3,22 +3,25 @@ from mydataprocess import mydataloader
 import option
 import net.model
 import time
+import os
+if not os.path.isdir('./result/result_preview'):
+  os.mkdir('./result/result_preview')
 myoption = option.opt()
 myoption.batchSize = 1 # if we have a batch norm maybe this would still working?
 myoption.name = 'pair'
-myoption.use_degree = 'wrt_position'
+myoption.use_degree = None
 myoption.use_label= True
-myoption.mode = 'train'
-myoption.which_epoch = 150
-myoption.forward = 'pair'
+myoption.mode = 'continue train'
+myoption.which_epoch = 400
+myoption.forward = 'seq'
 for name,value in vars(myoption).items():
     print('%s=%s' % (name,value))
 dataloader = mydataloader.Dataloader(myoption)
 pair_data = dataloader.load_data()
 mymodel = net.model.SCAR()
 mymodel.initialize(opt = myoption)
-start_epoch = 1 if myoption.mode == 'train' else myoption.which_epoch
-# start_epoch = 1 
+# start_epoch = 1 if myoption.mode == 'train' else myoption.which_epoch
+start_epoch = 1 
 print('start to train')
 for i in range(start_epoch,mymodel.opt.epoch):
     epoch_start_time = time.time()

@@ -329,7 +329,7 @@ class SCAR(model_wrapper):
 
         # ************************** many frames forward ************************** #
         for j, each_frame in enumerate(input, start=0):
-            print(j) # count if the GPU memory will exceed... CRYING..
+            # print(j) # count if the GPU memory will exceed... CRYING..
             real_past_frames[-1] = each_frame['next'].to(self.device)  # every time the real_past_frames will auto update
             if j == 0:  # if is the first time we use the raw blank_frame/1st_frame/whatever given by the dataset
                 loss, fake_next = self.pair_optimize(each_frame)
@@ -371,6 +371,13 @@ class SCAR(model_wrapper):
             # loss_dict['VGG_Loss'] += _['VGG_Loss']
             # loss_dict['L1_Loss'] += _['L1_Loss']
         # combine the loss
+        if self.opt.save_result:
+          result_label = str(time.time())
+          folder = './result/result_preview/' + result_label
+          if not os.path.isdir('folder'):
+            os.mkdir(folder)
+          for k,_ in enumerate(fake_frames,start=0):
+            fast_check_result.imsave(_[-1,:,:,:],index='fake'+str(k),dir=folder)
         return loss_dict,fake_frames
 
     def pair_optimize(self, input):
@@ -458,7 +465,63 @@ class SCAR(model_wrapper):
             _ = torch.sum(merge,1,keepdim=True)
             cat_list += [_]
         return torch.cat(cat_list,dim=1) # the shape should be match to granularity + 1(one is the zeros)
+    def make_random_degree(segmap_list):
+      """
+      we don't need difference, just make randomly put the segmap in different degree
+      """
+      # self.opt.granularity+1
+      segmaps = [segmap.to(self.device) for segmap in segmap_list]
 
+      empty = torch.zeros(self.opt.batchSize, 1, self.opt.input_size, self.opt.input_size).to(self.device) # if no tensor at a degree, fill a zero
+      one_hot_list = [[empty]]
+      for i in range(self.opt.granularity+1):
+        cat_list.append([empty]) # fill all the slot first
+      # random number random index random degree
+      import random
+      while len(segmaps)!=0:
+        num = random.randint(len(segmaps)) # how many segmap will go to the below degree
+        degree = random.randint(self.opt.granularity+1)
+        for j in range(num):
+          index = random.randint(len(segmaps)-1) # because we used pop, so the length will change
+          one_hot_list[degree].append(segmaps.pop(index))
+      cat_list = []
+      for each_degree in one_hot_list:
+        _ = torch.cat(each_degree,dim=1)
+        merge = torch.sum(_,1,keepdim=True) # we merge all the segmap in one degree
+        cat_list += [merge]
+      return torch.cat(cat_list,dim=1)
+
+    def inference(self,input,segmap_list,times=30):
+      with torch.no_grad():
+        fake_frames = []
+        current = input['current'].to(self.device)
+        last = input['last'].to(self.device)
+        fixed_input = [last]
+        if self.opt.use_label:
+          label = input['label']
+          fixed_input.append(label)
+          if self.opt.use_instance:
+            instance = self.get_edges(label).to(self.device)
+            fixed_input.append(instance)
+        if self.opt.use_wireframe:
+          wire_frame = input['wire_frame'].to(self.device)
+          fixed_input.append(instance)
+      # current and degree will refresh every time, the last and segmap and wireframe is fixed
+
+        for i in range(times):
+          random_degree = None # just make sure everytime is the new one.. actually should't need it
+          dynamic_input = None
+          random_degree = self.make_random_degree(segmap_list) if self.opt.use_degree else None
+          dynamic_input = fixed_input + [current,random_degree] if self.opt.use_degree else fixed_input + [current]
+          cat_feature = torch.cat(dynamic_input,dim=1)
+          fake,weight = self.netG(cat_feature,z)
+          if not self.opt.use_raw_only:
+              fake_next = fake*weight + (1-weight) * current
+          else:
+              fake_next = fake
+          fake_frames.append(fake_next)
+          current = fake_next
+        return fake_frames
 
 
 # this is for inference mode... should update in the future
