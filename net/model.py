@@ -465,7 +465,7 @@ class SCAR(model_wrapper):
             _ = torch.sum(merge,1,keepdim=True)
             cat_list += [_]
         return torch.cat(cat_list,dim=1) # the shape should be match to granularity + 1(one is the zeros)
-    def make_random_degree(segmap_list):
+    def make_random_degree(self,segmap_list):
       """
       we don't need difference, just make randomly put the segmap in different degree
       """
@@ -473,16 +473,16 @@ class SCAR(model_wrapper):
       segmaps = [segmap.to(self.device) for segmap in segmap_list]
 
       empty = torch.zeros(self.opt.batchSize, 1, self.opt.input_size, self.opt.input_size).to(self.device) # if no tensor at a degree, fill a zero
-      one_hot_list = [[empty]]
+      one_hot_list = []
       for i in range(self.opt.granularity+1):
-        cat_list.append([empty]) # fill all the slot first
+        one_hot_list.append([empty]) # fill all the slot first
       # random number random index random degree
       import random
       while len(segmaps)!=0:
-        num = random.randint(len(segmaps)) # how many segmap will go to the below degree
-        degree = random.randint(self.opt.granularity+1)
+        num = random.randint(0,len(segmaps)) # how many segmap will go to the below degree
+        degree = random.randint(0,self.opt.granularity)
         for j in range(num):
-          index = random.randint(len(segmaps)-1) # because we used pop, so the length will change
+          index = random.randint(0,len(segmaps)-1) # because we used pop, so the length will change
           one_hot_list[degree].append(segmaps.pop(index))
       cat_list = []
       for each_degree in one_hot_list:

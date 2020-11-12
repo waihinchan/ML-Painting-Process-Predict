@@ -8,7 +8,7 @@ if not os.path.isdir('./result/result_preview'):
 myoption = option.opt()
 myoption.batchSize = 1 # if we have a batch norm maybe this would still working?
 myoption.name = 'pair'
-myoption.use_degree = None
+myoption.use_degree = 'wrt_position'
 myoption.use_label= True
 myoption.mode = 'test'
 myoption.which_epoch = 400
@@ -31,6 +31,8 @@ for _ in os.listdir(segmap_folder):
     label_path = os.path.join(segmap_folder,_)
     print(label_path)
     break
+one_hot_paths = [ os.path.join(segmap_folder,one_hot) for one_hot in os.listdir(segmap_folder) if not 'segmap' in one_hot and 'label' in one_hot ]
+print(one_hot_paths)
 from utils.fast_check_result import grabdata
 current = grabdata(image_paths[0],myoption)
 last = grabdata(image_paths[-1],myoption)
@@ -40,7 +42,8 @@ data = {
   'last':last,
   'label':label
 }
-fake_frames = mymodel.inference(data,None)
+one_hot_list = [grabdata(one_hot,myoption) for one_hot in one_hot_paths]
+fake_frames = mymodel.inference(data,one_hot_list)
 print(len(fake_frames))
 from utils.fast_check_result import imsave
 for i,fake_frame in enumerate(fake_frames,start=1):
