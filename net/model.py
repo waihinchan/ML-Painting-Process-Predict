@@ -498,7 +498,7 @@ class SCAR(model_wrapper):
         last = input['last'].to(self.device)
         fixed_input = [last]
         if self.opt.use_label:
-          label = input['label']
+          label = input['label'].to(self.device)
           fixed_input.append(label)
           if self.opt.use_instance:
             instance = self.get_edges(label).to(self.device)
@@ -514,7 +514,7 @@ class SCAR(model_wrapper):
           random_degree = self.make_random_degree(segmap_list) if self.opt.use_degree else None
           dynamic_input = fixed_input + [current,random_degree] if self.opt.use_degree else fixed_input + [current]
           cat_feature = torch.cat(dynamic_input,dim=1)
-          fake,weight = self.netG(cat_feature,z)
+          fake,weight = self.netG(cat_feature,None)
           if not self.opt.use_raw_only:
               fake_next = fake*weight + (1-weight) * current
           else:

@@ -13,7 +13,7 @@ def grabdata(path,opt=None):
     input_size = 256 if opt == None else opt.input_size
     input_image = Image.open(path)
     pipe = []
-    # pipe.append(transforms.Resize(input_size))
+    pipe.append(transforms.Resize(input_size))
     pipe.append(transforms.ToTensor())
     pipe = transforms.Compose(pipe)
     image = pipe(input_image)
