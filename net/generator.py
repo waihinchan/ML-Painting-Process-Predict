@@ -340,13 +340,12 @@ class Decoder2(nn.Module):
                 self.weight_up4 = copy.deepcopy(self.up4)
             self.weight_last = copy.deepcopy(self.last)
             self.weight_final = nn.Sequential(*[nn.ReflectionPad2d(3), nn.Conv2d(opt.output_channel, opt.output_channel, kernel_size=7, padding=0), nn.Sigmoid()])
-        # 如果用weight的话 其实思路和wrtposition很像的，所以意义不是很大？
-        # 都试试
+
         print('Decoder is using:' + CH_list + 'as input')
     def forward(self, cat_frame,z=None):
-        reshape_degree = None
         if z is None:
             z = torch.randn(cat_frame.size(0), self.opt.z_dim,dtype=torch.float32, device=cat_frame.get_device())
+        #TODO : try to plot this and make a compare
 
         x = self.fc(z)
         x = x.view(self.opt.batchSize,8 * self.newng, self.sw , self.sh)
@@ -398,7 +397,7 @@ class Decoder2(nn.Module):
 # **************************************************************************** #
 class Encoder3(nn.Module):
     def __init__(self,opt):
-        super(Encoder2, self).__init__()
+        super(Encoder3, self).__init__()
         self.opt = opt
         inputCH = opt.input_chan*3 # current + last + next is fixed
         CH_list = 'current,last,next,'
@@ -419,13 +418,15 @@ class Encoder3(nn.Module):
             CH_list+='wrt_position,'
         kw = 3
         pw = int(np.ceil((kw - 1.0) / 2))
-        ng = opt.firstK
+        ng = ndf = opt.firstK
         norm_layer = get_nonspade_norm_layer(opt,opt.norm_type)
-        self.layer_0 = norm_layer(nn.Conv2d(input_CH, ndf, kw, stride=2, padding=pw))
+        self.layer_0 = norm_layer(nn.Conv2d(inputCH, ndf, kw, stride=2, padding=pw))
         self.layer_1 = norm_layer(nn.Conv2d(ndf * 1, ndf * 2, kw, stride=2, padding=pw))
         self.layer_2 = norm_layer(nn.Conv2d(ndf * 2, ndf * 4, kw, stride=2, padding=pw))
         self.layer_3 = norm_layer(nn.Conv2d(ndf * 4, ndf * 8, kw, stride=2, padding=pw))
         self.layer_4 = norm_layer(nn.Conv2d(ndf * 8, ndf * 8, kw, stride=2, padding=pw))
+        if opt.input_size >= 256:
+            self.layer_5 = norm_layer(nn.Conv2d(ndf * 8, ndf * 8, kw, stride=2, padding=pw))
         self.actvn = nn.LeakyReLU(0.2, False)
         coefficient = 128 if self.opt.input_size>=256 else 512
         self.fc_mu = nn.Sequential(*[nn.Linear(ng * coefficient, opt.z_dim)])
@@ -450,7 +451,7 @@ class Encoder3(nn.Module):
 # **************************************************************************** #
 class Deocder3(nn.Module):
     def __init__(self,opt,input_CH):
-        super(Deocder, self).__init__()
+        super(Deocder3, self).__init__()
         self.opt = opt
         self.sw = opt.input_size // (2**opt.n_downsample_global)
         self.sh = self.sw
@@ -523,17 +524,22 @@ class Deocder3(nn.Module):
             input = torch.randn(cat_frame.size(0), self.opt.z_dim,
                                 dtype=torch.float32, device=cat_frame.get_device())
         skips = []
+        weight_skips = []
         skip = self.actvn(self.layer1(cat_frame))
         skips.append(skip)
+        weight_skips.append(skip)
         skip = self.actvn(self.layer2(skips[-1]))
         skips.append(skip)
+        weight_skips.append(skip)
         skip = self.actvn(self.layer3(skips[-1]))
         skips.append(skip)
+        weight_skips.append(skip)
         skip = self.actvn(self.layer4(skips[-1]))
-        img_feature = skip
         skips.append(skip)
+        weight_skips.append(skip)
         skips.reverse()
-        weight_skips = skips
+        weight_skips.reverse()
+
         x = self.fc(input)
         x = x.view(-1, 8 * self.opt.firstK, self.sw , self.sh)
         weight_x = x

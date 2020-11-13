@@ -11,7 +11,7 @@ myoption.batchSize = 1 # if we have a batch norm maybe this would still working?
 myoption.name = 'pair'
 myoption.use_degree = 'wrt_position'
 myoption.use_label= True
-myoption.mode = 'continue train'
+myoption.mode = 'train'
 myoption.which_epoch = 200
 myoption.forward = 'pair'
 for name,value in vars(myoption).items():

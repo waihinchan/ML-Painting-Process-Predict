@@ -187,16 +187,16 @@ class SCAR(model_wrapper):
         super(SCAR, self).__init__()
     def initialize(self,opt):
         model_wrapper.initialize(self,opt)
-        self.netG = net.generator.Decoder2(opt).to(self.device)
-        self.netG.apply(init_weights)
-        # # just a small test
-        # self.netG = net.generator.Decoder3(opt,14).to(self.device)
+        # self.netG = net.generator.Decoder(opt).to(self.device)
         # self.netG.apply(init_weights)
-        # # just a small test
+        # just a small test
+        self.netG = net.generator.Deocder3(opt,14).to(self.device)
+        self.netG.apply(init_weights)
+        # just a small test
         self.ByteTensor = torch.cuda.ByteTensor if self.opt.gpu_ids > 0 else torch.ByteTensor
         if 'train' in self.opt.mode:
-            self.netE = net.generator.Encoder2(opt).to(self.device)
-            self.netE.apply(init_weights) # if use encoder3 here should comment
+            self.netE = net.generator.Encoder3(opt).to(self.device)
+            # self.netE.apply(init_weights) # if use encoder3 here should comment
             netD_inputchan = opt.input_chan * 3 # current last real_next/fake_next 9
             if opt.use_difference:
                 netD_inputchan += opt.input_chan
@@ -300,17 +300,17 @@ class SCAR(model_wrapper):
         Decoder_input = torch.cat(input_list,dim=1)
 
         return {
-            'current':current,
-            'last':last,
-            'next':next,
-            'label':label,
-            'difference':difference,
-            'instance': instance,
-            'degree':degree,
-            'wire_frame':wire_frame,
-            'Encoder_input': Encoder_input,
-            'Decoder_input':Decoder_input,
-            'cat_list':cat_list
+            'current':current, # tensor
+            'last':last, # tensor 
+            'next':next, # tensor 
+            'label':label, # tensor 
+            'difference':difference, # tensor 
+            'instance': instance, # tensor 
+            'degree':degree, # tensor
+            'wire_frame':wire_frame, # tensor
+            'Encoder_input': Encoder_input, #tensor
+            'Decoder_input':Decoder_input, # tensor
+            'cat_list':cat_list # list
         }
     def get_edges(self,t):
         edge = self.ByteTensor(t.size()).zero_()
