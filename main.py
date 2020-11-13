@@ -12,8 +12,8 @@ myoption.name = 'pair'
 myoption.use_degree = 'wrt_position'
 myoption.use_label= True
 myoption.mode = 'continue train'
-myoption.which_epoch = 400
-myoption.forward = 'seq'
+myoption.which_epoch = 200
+myoption.forward = 'pair'
 for name,value in vars(myoption).items():
     print('%s=%s' % (name,value))
 dataloader = mydataloader.Dataloader(myoption)

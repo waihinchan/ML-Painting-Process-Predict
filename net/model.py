@@ -592,13 +592,13 @@ class SCAR(model_wrapper):
           else:
               fake_next = fake
           fake_frames.append(fake_next)
-          imsave(fake_next[-1,:,:,:],index = 'fake'+str(i),dir = './result/result_preview/')
-          imsave(current[-1,:,:,:],index = 'current'+str(i),dir = './result/result_preview/')
-          imsave(label[-1,:,:,:],index = 'label'+str(i),dir = './result/result_preview/')
-          imsave(last[-1,:,:,:],index = 'last'+str(i),dir = './result/result_preview/')
+          # imsave(fake_next[-1,:,:,:],index = 'fake'+str(i),dir = './result/result_preview/')
+          # imsave(current[-1,:,:,:],index = 'current'+str(i),dir = './result/result_preview/')
+          # imsave(label[-1,:,:,:],index = 'label'+str(i),dir = './result/result_preview/')
+          # imsave(last[-1,:,:,:],index = 'last'+str(i),dir = './result/result_preview/')
 
-          for j in range(random_degree.size(1)):
-            imsave(random_degree[-1,j,:,:],index = 'degree'+str(i) + '_' + str(j) , dir = './result/result_preview/')
+          # for j in range(random_degree.size(1)):
+          #   imsave(random_degree[-1,j,:,:],index = 'degree'+str(i) + '_' + str(j) , dir = './result/result_preview/')
 
           current = fake_next
           

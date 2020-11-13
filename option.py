@@ -7,8 +7,8 @@ cpu_num = multiprocessing.cpu_count()
 class opt():
     def __init__(self):
         self.learningrate = 0.0002
-        self.epoch = 402
-        self.niter_decay = 300
+        self.epoch = 202
+        self.niter_decay = 100
         self.lsgan = True
         self.mode = "train"
         self.input_chan = 3
@@ -46,7 +46,8 @@ class opt():
         self.l1_lambda = 100
         self.GAN_lambda = 10
         self.Vgg_lambda = 10
-        self.Kld_lambda = 0.05 # not sure should take this high or low
+        self.Kld_lambda = 0.05
+         # not sure should take this high or low
         self.forward = 'pair'
         self.z_dim = 256
 
