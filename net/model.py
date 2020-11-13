@@ -489,6 +489,20 @@ class SCAR(model_wrapper):
         cat_list += [merge]
       return torch.cat(cat_list,dim=1)
 
+    def test(self,input):
+      self.netE = net.generator.Encoder2(self.opt).to(self.device)
+      pretrain_path = self.save_dir
+      self.load_network(self.netE, 'E', self.opt.which_epoch, pretrain_path)
+      self.KLDloss = net.loss.KLDLoss()
+      with torch.no_grad():
+        input_ = self.pre_process_input(input)
+        fake,weight,KLD_Loss = self.generate_next_frame(input_['Encoder_input'],input_['Decoder_input'])
+        if not self.opt.use_raw_only:
+            fake_next = fake*weight + (1-weight) * input_['current']
+        else:
+            fake_next = fake
+      return fake_next
+
     def inference(self,input,segmap_list,times=30):
       with torch.no_grad():
         fake_frames = []
