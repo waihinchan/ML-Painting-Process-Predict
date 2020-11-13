@@ -46,6 +46,7 @@ class opt():
         self.l1_lambda = 100
         self.GAN_lambda = 10
         self.Vgg_lambda = 10
+        self.Kld_lambda = 0.05 # not sure should take this high or low
         self.forward = 'pair'
         self.z_dim = 256
 

@@ -189,10 +189,14 @@ class SCAR(model_wrapper):
         model_wrapper.initialize(self,opt)
         self.netG = net.generator.Decoder2(opt).to(self.device)
         self.netG.apply(init_weights)
+        # # just a small test
+        # self.netG = net.generator.Decoder3(opt,14).to(self.device)
+        # self.netG.apply(init_weights)
+        # # just a small test
         self.ByteTensor = torch.cuda.ByteTensor if self.opt.gpu_ids > 0 else torch.ByteTensor
         if 'train' in self.opt.mode:
             self.netE = net.generator.Encoder2(opt).to(self.device)
-            self.netE.apply(init_weights)
+            self.netE.apply(init_weights) # if use encoder3 here should comment
             netD_inputchan = opt.input_chan * 3 # current last real_next/fake_next 9
             if opt.use_difference:
                 netD_inputchan += opt.input_chan
@@ -363,7 +367,8 @@ class SCAR(model_wrapper):
             acc_loss.append(loss)  # we will compute the loss at last
         # combine the loss
         loss_dict = {'G_loss': 0,
-                     'D_loss': 0,
+                     'D_loss': 0
+                    
                      }
         for _ in acc_loss:  # all the pair loss are inside
             loss_dict['G_loss'] += _['G_loss']
@@ -417,7 +422,8 @@ class SCAR(model_wrapper):
 
         return {
             'G_loss':G_Loss,
-            'D_loss':D_loss
+            'D_loss':D_loss,
+             'KLd_loss':KLD_Loss
         },fake_next
     def encode_z(self, x):
         mu, logvar = self.netE(x)
@@ -429,7 +435,7 @@ class SCAR(model_wrapper):
         return eps.mul(std) + mu
     def generate_fake(self,input,cat_feature):
         z, mu, logvar = self.encode_z(input)
-        KLD_loss = self.KLDloss(mu, logvar)  # default lambda_kld = 0.05 in SPADE
+        KLD_loss = self.KLDloss(mu, logvar) * self.opt.Kld_lambda  # default lambda_kld = 0.05 in SPADE
         fake,w = self.netG(cat_feature,z)
         return fake, w, KLD_loss
     def caculate_degree(self,difference,segmap_list):
@@ -444,10 +450,10 @@ class SCAR(model_wrapper):
         #  but don't know why SPADE's pre-process not working
         difference_ = torch.sum(difference,1,keepdim=True) # merge the difference CH
         empty = torch.zeros(self.opt.batchSize, 1, self.opt.input_size, self.opt.input_size).to(self.device) # if no tensor at a degree, fill a zero
-        degree_list = [self.opt.zero_degree] # the least degree0 is less than 5%
+        degree_list = [self.opt.zero_degree] # the least degree0 is less than 1%
         one_hot_list = [[empty]] #the first empty one
-        for i in range(1,self.opt.granularity+1): # we already have zero-0.05
-            degree_list.append((0.95/self.opt.granularity)*i)
+        for i in range(1,self.opt.granularity+1): # we already have zero-0.01
+            degree_list.append((0.99/self.opt.granularity)*i)
             one_hot_list.append([empty]) # this is for later we merge the all single_segmap in 1 degree list
 
         for single_segmap in segmap_list:
@@ -488,14 +494,68 @@ class SCAR(model_wrapper):
         merge = torch.sum(_,1,keepdim=True) # we merge all the segmap in one degree
         cat_list += [merge]
       return torch.cat(cat_list,dim=1)
+    def pre_process_input_(self,input):
+        current = input['current'].to(self.device)
+        last = input['last'].to(self.device)
+        input_list = [current,last] # the next remain to modify at below
+        next = input['next'].to(self.device)
+        # ****************** current next last are fixed ******************
 
+        if self.opt.use_difference:
+            difference = input['difference'].to(self.device) # the difference remain to modify at below
+        else :
+            difference = None
+        if self.opt.use_label: # this is the full segmap,not the one-hot
+            label = input['label'].to(self.device)
+            input_list.append(label)
+        else:
+            label = None
+        if self.opt.use_degree == 'wrt_position':
+            assert input['segmaps'] is not None, 'if use wrt_position degree please return a single segmap list'
+            segmaps = [segmap.to(self.device) for segmap in input['segmaps']]
+            degree = self.make_random_degree(segmaps) #########here is the change
+            input_list.append(degree)
+        else:
+            degree = None
+        if self.opt.use_instance:
+            assert label is not None,'if use instance please return a full_segmap'
+            # TODO actually the instance map is not totaly the same as full segmap. but in my case is the same
+            instance = self.get_edges(label)
+            input_list.append(instance)
+        else:
+            instance = None
+        if self.opt.use_wireframe:
+            wire_frame = input['use_wireframe']
+            input_list.append(wire_frame)
+        else:
+            wire_frame = None
+
+        E_list = input_list +[next] if difference is None else input_list+[next,difference]
+        cat_list = input_list
+        Encoder_input = torch.cat(E_list,dim=1)
+        Decoder_input = torch.cat(input_list,dim=1)
+
+        return {
+            'current':current,
+            'last':last,
+            'next':next,
+            'label':label,
+            'difference':difference,
+            'instance': instance,
+            'degree':degree,
+            'wire_frame':wire_frame,
+            'Encoder_input': Encoder_input,
+            'Decoder_input':Decoder_input,
+            'cat_list':cat_list
+        }
     def test(self,input):
+
       self.netE = net.generator.Encoder2(self.opt).to(self.device)
       pretrain_path = self.save_dir
       self.load_network(self.netE, 'E', self.opt.which_epoch, pretrain_path)
       self.KLDloss = net.loss.KLDLoss()
       with torch.no_grad():
-        input_ = self.pre_process_input(input)
+        input_ = self.pre_process_input_(input)
         fake,weight,KLD_Loss = self.generate_next_frame(input_['Encoder_input'],input_['Decoder_input'])
         if not self.opt.use_raw_only:
             fake_next = fake*weight + (1-weight) * input_['current']
@@ -532,10 +592,19 @@ class SCAR(model_wrapper):
           else:
               fake_next = fake
           fake_frames.append(fake_next)
+          imsave(fake_next[-1,:,:,:],index = 'fake'+str(i),dir = './result/result_preview/')
+          imsave(current[-1,:,:,:],index = 'current'+str(i),dir = './result/result_preview/')
+          imsave(label[-1,:,:,:],index = 'label'+str(i),dir = './result/result_preview/')
+          imsave(last[-1,:,:,:],index = 'last'+str(i),dir = './result/result_preview/')
+
+          for j in range(random_degree.size(1)):
+            imsave(random_degree[-1,j,:,:],index = 'degree'+str(i) + '_' + str(j) , dir = './result/result_preview/')
+
           current = fake_next
+          
         return fake_frames
 
-
+from utils.fast_check_result import imsave
 # this is for inference mode... should update in the future
 import os
 import random
