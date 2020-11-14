@@ -62,7 +62,7 @@ for i in range(start_epoch,mymodel.opt.epoch):
     #     mymodel.opt.save_result = True
     if i % 100 == 0:
         mymodel.opt.save_result = True
-    if i % 101 == 1:
+    if i % 100 == 1:
         mymodel.opt.save_result = False
     # mymodel.opt.save_result = True
 print('train finished')
