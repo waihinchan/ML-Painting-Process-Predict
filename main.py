@@ -58,12 +58,12 @@ for i in range(start_epoch,mymodel.opt.epoch):
     if i % 50 == 0:
         mymodel.save(i)
         print('save %s_epoch' % i)
-    # if i % 50 == 0 and i >= 50:
+    # if i % 50 == 0:
     #     mymodel.opt.save_result = True
-    # if i % 100 == 0:
-    #     mymodel.opt.save_result = True
-    # if i % 101 == 1:
-    #     mymodel.opt.save_result = False
-    mymodel.opt.save_result = True
+    if i % 100 == 0:
+        mymodel.opt.save_result = True
+    if i % 101 == 1:
+        mymodel.opt.save_result = False
+    # mymodel.opt.save_result = True
 print('train finished')
 

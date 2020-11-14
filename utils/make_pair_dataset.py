@@ -250,6 +250,10 @@ def make_pair_dataset(dataset_dir,use_label='wrt_time',granularity = 3,step=3,tt
     print('Done')
 # for i in range(6,12,3):
 #   make_pair_dataset('../dataset/pair',use_label='wrt_position',granularity=4,step=i,ttframe=30)
+make_pair_dataset('../dataset/pair',use_label='wrt_position',granularity=4,step=1,ttframe=30)
+make_pair_dataset('../dataset/pair',use_label='wrt_position',granularity=4,step=3,ttframe=30)
+make_pair_dataset('../dataset/pair',use_label='wrt_position',granularity=4,step=6,ttframe=30)
+make_pair_dataset('../dataset/pair',use_label='wrt_position',granularity=4,step=9,ttframe=30)
 make_pair_dataset('../dataset/pair',use_label='wrt_position',granularity=4,step=12,ttframe=30)
 
 # if use label + wrt_time , i to j
