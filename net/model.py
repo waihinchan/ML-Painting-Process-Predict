@@ -187,12 +187,12 @@ class SCAR(model_wrapper):
         super(SCAR, self).__init__()
     def initialize(self,opt):
         model_wrapper.initialize(self,opt)
-        # self.netG = net.generator.Decoder(opt).to(self.device)
-        # self.netG.apply(init_weights)
-        # just a small test
-        self.netG = net.generator.Deocder3(opt,14).to(self.device)
+        self.netG = net.generator.Decoder2(opt).to(self.device)
         self.netG.apply(init_weights)
-        # just a small test
+        # # just a small test
+        # self.netG = net.generator.Deocder3(opt,14).to(self.device)
+        # self.netG.apply(init_weights)
+        # # just a small test
         self.ByteTensor = torch.cuda.ByteTensor if self.opt.gpu_ids > 0 else torch.ByteTensor
         if 'train' in self.opt.mode:
             self.netE = net.generator.Encoder3(opt).to(self.device)
@@ -414,6 +414,7 @@ class SCAR(model_wrapper):
             fast_check_result.imsave(input_['next'][-1,:,:,:],index=result_label+'real',dir='./result/result_preview/')
             fast_check_result.imsave(fake_next[-1,:,:,:],index=result_label+'fake',dir='./result/result_preview/')
             fast_check_result.imsave(input_['current'][-1,:,:,:],index=result_label+'current',dir='./result/result_preview/')
+            self.opt.save_result = False
             # if self.opt.use_difference:
             #     fast_check_result.imsave(input_['difference'][-1,:,:,:],index=result_label+'difference',dir='./result/result_preview/')
             # if self.opt.use_degree == 'wrt_position':

@@ -53,13 +53,17 @@ for i in range(start_epoch,mymodel.opt.epoch):
     if i % 5 == 1:
         print('epoch%s last loss is %s' % (i, loss))
         mymodel.opt.save_result = False
+        mymodel.opt.Kld_lambda =  mymodel.opt.Kld_lambda + mymodel.opt.Kld_lambda * 0.1
+        print('current kld lambda is %s' %  mymodel.opt.Kld_lambda)
     if i % 50 == 0:
         mymodel.save(i)
         print('save %s_epoch' % i)
-    if i % 50 == 0:
-        if i >= 50:
-            mymodel.opt.save_result = True
-    if i % 10 == 1:
-        mymodel.opt.save_result = False
+    # if i % 50 == 0 and i >= 50:
+    #     mymodel.opt.save_result = True
+    # if i % 100 == 0:
+    #     mymodel.opt.save_result = True
+    # if i % 101 == 1:
+    #     mymodel.opt.save_result = False
+    mymodel.opt.save_result = True
 print('train finished')
 

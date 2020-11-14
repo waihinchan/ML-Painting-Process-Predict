@@ -431,7 +431,7 @@ class Encoder3(nn.Module):
         coefficient = 128 if self.opt.input_size>=256 else 512
         self.fc_mu = nn.Sequential(*[nn.Linear(ng * coefficient, opt.z_dim)])
         self.fc_var = nn.Sequential(*[nn.Linear(ng * coefficient, opt.z_dim)])
-        print('Encoder is using:' + CH_list)
+        print('Encoder is using:' + CH_list + 'as input')
     def forward(self,input):
         x = input
         if x.size(2) != 256 or x.size(3) != 256:

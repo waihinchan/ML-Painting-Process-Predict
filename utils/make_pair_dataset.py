@@ -200,7 +200,9 @@ def make_pair_dataset(dataset_dir,use_label='wrt_time',granularity = 3,step=3,tt
         # image_folder.sort(key=lambda x: int(re.match('(\d+)', x.split('/')[-1]).group(1)))
         # TODO: update this sort in the future depend how the dataset format
         image_folder.sort()
-        step_ = 1 if use_label=='wrt_time' else (len(image_folder)//ttframe+1)
+        # step_ = 1 if use_label=='wrt_time' else (len(image_folder)//ttframe+1)
+        step_ = 1 if use_label=='wrt_time' else step
+
         for i in range(0,len(image_folder),step_):
             pair_name = os.path.dirname(image_folder[i])
             mark = pair_name.split('/')[-1]
@@ -246,8 +248,9 @@ def make_pair_dataset(dataset_dir,use_label='wrt_time',granularity = 3,step=3,tt
 
 
     print('Done')
-
-make_pair_dataset('../dataset/pair',use_label='wrt_position',granularity=4,step=1,ttframe=30)
+# for i in range(6,12,3):
+#   make_pair_dataset('../dataset/pair',use_label='wrt_position',granularity=4,step=i,ttframe=30)
+make_pair_dataset('../dataset/pair',use_label='wrt_position',granularity=4,step=12,ttframe=30)
 
 # if use label + wrt_time , i to j
 # if use label + wrt_position, no i to j
