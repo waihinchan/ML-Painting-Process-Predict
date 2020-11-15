@@ -9,6 +9,8 @@ import platform
 import time
 from net.network import init_weights
 from utils import fast_check_result
+import matplotlib
+import matplotlib.pyplot as plt
 # ******************************************** don't touch here ***********************************************
 class model_wrapper(nn.Module):
     def __init__(self):
@@ -550,18 +552,20 @@ class SCAR(model_wrapper):
             'cat_list':cat_list
         }
     def test(self,input):
-
-      self.netE = net.generator.Encoder2(self.opt).to(self.device)
-      pretrain_path = self.save_dir
-      self.load_network(self.netE, 'E', self.opt.which_epoch, pretrain_path)
-      self.KLDloss = net.loss.KLDLoss()
+      # self.netE = net.generator.Encoder2(self.opt).to(self.device)
+      # pretrain_path = self.save_dir
+      # self.load_network(self.netE, 'E', self.opt.which_epoch, pretrain_path)
+      # self.KLDloss = net.loss.KLDLoss()
       with torch.no_grad():
         input_ = self.pre_process_input_(input)
-        fake,weight,KLD_Loss = self.generate_next_frame(input_['Encoder_input'],input_['Decoder_input'])
+        # fake,weight,KLD_Loss = self.generate_next_frame(input_['Encoder_input'],input_['Decoder_input'])
+        fake,weight = self.netG(input_['Decoder_input'],None)
+        print(input_['Decoder_input'].shape)
         if not self.opt.use_raw_only:
             fake_next = fake*weight + (1-weight) * input_['current']
         else:
             fake_next = fake
+
       return fake_next
 
     def inference(self,input,segmap_list,times=30):
