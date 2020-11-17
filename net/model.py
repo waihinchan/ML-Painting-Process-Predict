@@ -337,7 +337,7 @@ class SCAR(model_wrapper):
 
         # ************************** many frames forward ************************** #
         for j, each_frame in enumerate(input, start=0):
-            print(j) # count if the GPU memory will exceed... CRYING..
+            # print(j) # count if the GPU memory will exceed... CRYING..
             real_past_frames[-1] = each_frame['next'].to(self.device)  # every time the real_past_frames will auto update
             if j == 0:  # if is the first time we use the raw blank_frame/1st_frame/whatever given by the dataset
                 loss, fake_next = self.pair_optimize(each_frame)
@@ -563,15 +563,9 @@ class SCAR(model_wrapper):
             'cat_list':cat_list
         }
     def test(self,input):
-        # self.netE = net.generator.Encoder2(self.opt).to(self.device)
-        # pretrain_path = self.save_dir
-        # self.load_network(self.netE, 'E', self.opt.which_epoch, pretrain_path)
-        # self.KLDloss = net.loss.KLDLoss()
         with torch.no_grad():
             input_ = self.pre_process_input_(input)
-            # fake,weight,KLD_Loss = self.generate_next_frame(input_['Encoder_input'],input_['Decoder_input'])
             fake,weight = self.netG(input_['Decoder_input'],None)
-            print(input_['Decoder_input'].shape)
             if not self.opt.use_raw_only:
                 fake_next = fake*weight + (1-weight) * input_['current']
             else:
@@ -579,45 +573,14 @@ class SCAR(model_wrapper):
 
         return fake_next
 
-    def inference(self,input,segmap_list,times=30):
+    def inference(self,input,total_frames =20):
         with torch.no_grad():
             fake_frames = []
-            current = input['current'].to(self.device)
-            last = input['last'].to(self.device)
-            fixed_input = [last]
-            if self.opt.use_label:
-                label = input['label'].to(self.device)
-                fixed_input.append(label)
-                if self.opt.use_instance:
-                    instance = self.get_edges(label).to(self.device)
-                    fixed_input.append(instance)
-            if self.opt.use_wireframe:
-                wire_frame = input['wire_frame'].to(self.device)
-                fixed_input.append(instance)
-            # current and degree will refresh every time, the last and segmap and wireframe is fixed
-
-            for i in range(times):
-                random_degree = None # just make sure everytime is the new one.. actually should't need it
-                dynamic_input = None
-                random_degree = self.make_random_degree(segmap_list) if self.opt.use_degree else None
-                dynamic_input = fixed_input + [current,random_degree] if self.opt.use_degree else fixed_input + [current]
-                cat_feature = torch.cat(dynamic_input,dim=1)
-                fake,weight = self.netG(cat_feature,None)
-                if not self.opt.use_raw_only:
-                    fake_next = fake*weight + (1-weight) * current
-                else:
-                    fake_next = fake
+            input_ = input
+            for i in range(total_frames):
+                fake_next = self.test(input_) #pre_process the input and generate fake
+                input_['current'] = fake_next #modify the current for next time
                 fake_frames.append(fake_next)
-                # imsave(fake_next[-1,:,:,:],index = 'fake'+str(i),dir = './result/result_preview/')
-                # imsave(current[-1,:,:,:],index = 'current'+str(i),dir = './result/result_preview/')
-                # imsave(label[-1,:,:,:],index = 'label'+str(i),dir = './result/result_preview/')
-                # imsave(last[-1,:,:,:],index = 'last'+str(i),dir = './result/result_preview/')
-
-                # for j in range(random_degree.size(1)):
-                #   imsave(random_degree[-1,j,:,:],index = 'degree'+str(i) + '_' + str(j) , dir = './result/result_preview/')
-
-                current = fake_next
-
             return fake_frames
 
 from utils.fast_check_result import imsave

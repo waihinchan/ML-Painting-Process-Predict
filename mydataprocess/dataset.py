@@ -129,7 +129,7 @@ class seq_dataset(data.Dataset):
         frames = [Image.open(img) for img in pair_paths if is_image_file(img) and not 'label' in img and not 'single' in img]
         # ************************* all the pair folder ************************* #
         parent = os.path.dirname(os.path.dirname(os.path.dirname(pair_paths[0])))
-        segmap_folder = parent + '/segmap'  # not sure if this still working
+        segmap_folder = parent + '/segmap'  
 
         # ************************* the segmaps folder ************************* #
 
@@ -180,7 +180,6 @@ class seq_dataset(data.Dataset):
     def __getitem__(self, index,smapling_traning = False): # this will return a list consist of many dict
         if not smapling_traning:
             video = self.all_seq[index]
-            print(video)
             all_pairs = [os.path.join(video,pair) for pair in os.listdir(video) if 'pair' in pair]
             # all_pairs.sort(key=lambda x: int(re.match('(\d+)', x.split('/')[-1].split('pair')[-1]).group(1)))
             all_pairs.sort(key=lambda x: int(re.match('(\d+)', x.split('/')[-1].split('pair')[-1].split('to')[0]).group(1))) # sort the pairs again as we want it in seq
