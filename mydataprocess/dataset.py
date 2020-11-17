@@ -87,7 +87,7 @@ def build_pipe(opt):
 
     pipes.append(transforms.ToTensor())
     pipes.append(transforms.Normalize((0.5, 0.5, 0.5),
-                                          (0.5, 0.5, 0.5)))
+                                      (0.5, 0.5, 0.5)))
     return transforms.Compose(pipes)
 
 def __make_power_2(img, base, method=Image.BICUBIC):
@@ -109,12 +109,19 @@ class seq_dataset(data.Dataset):
         print("the root path is " + self.data_root_path)
         self.path = os.path.join(self.data_root_path, opt.name)
         print("the dataset path is " + self.path)
-        all = os.walk(self.path)
+
         # this for storage all the video folder (each folder has many frames)
-        self.all_seq = [os.path.join(self.path,video) for video in os.listdir(self.path) if os.path.isdir(os.path.join(self.path,video))]
+        self.all_folder = [os.path.join(self.path,video) for video in os.listdir(self.path) if os.path.isdir(os.path.join(self.path,video))]
+        self.all_folder.sort() # sort the video index
+        self.all_seq = [ [os.path.join(folder,granularity) for granularity in os.listdir(folder) if 'granularity' in granularity and os.path.isdir(os.path.join(self.path,video))] for folder in self.all_folder]
+        # same like:
+        # for folder in self.all_folder:
+        # for granularity in os.listdir(folder):
+        # if balbalbala
 
         # we will iter and sort the sub folder when __getitem__
-        self.all_seq.sort()
+        self.all_seq.sort(key=lambda x: int(re.match('(\d+)', x.split('/')[-1].split('pair')[-1]).group(1))) # TODO remain to be test
+        # we actually have different granularity, so actually it's like granularity1,granularity1,granularity1,granularity2,granularity2,granularity2 or what..
     def get_one_pairs(self,path):# this will return a single dict, same like the pair dataset
 
         return_list = {'current': None, 'last': None,'next':None}
@@ -171,23 +178,33 @@ class seq_dataset(data.Dataset):
         # *************************** make the return list ***************************
 
         return return_list
-    def __getitem__(self, index):# this will return a list consist of many dict
-        video = self.all_seq[index]
-        all_pairs = [os.path.join(video,pair) for pair in os.listdir(video) if 'pair' in pair]
-        # all_pairs.sort(key=lambda x: int(re.match('(\d+)', x.split('/')[-1].split('pair')[-1]).group(1)))
-        all_pairs.sort(key=lambda x: int(re.match('(\d+)', x.split('/')[-1].split('pair')[-1].split('to')[0]).group(1)))
+    def __getitem__(self, index,smapling_traning = False): # this will return a list consist of many dict
+        if not smapling_traning:
+            video = self.all_seq[index]
+            all_pairs = [os.path.join(video,pair) for pair in os.listdir(video) if 'pair' in pair]
+            # all_pairs.sort(key=lambda x: int(re.match('(\d+)', x.split('/')[-1].split('pair')[-1]).group(1)))
+            all_pairs.sort(key=lambda x: int(re.match('(\d+)', x.split('/')[-1].split('pair')[-1].split('to')[0]).group(1))) # sort the pairs again as we want it in seq
+            # dataset/pair/00001/_00010pair159
+            # split the / and take _00010pair159
+            # split the pair and take the 159
+            return [self.get_one_pairs(single_pair) for single_pair in all_pairs]
+        else:
+            # all_folder
+            pass
+            # TODO remain to update
 
-        # dataset/pair/00001/_00010pair159
-        # split the / and take _00010pair159
-        # split the pair and take the 159
-        return [self.get_one_pairs(single_pair) for single_pair in all_pairs]
     def get_segmap(self,index_list,pipe):
         index_tensor_list = [i for i in map(pipe,index_list)]
         segmap = torch.cat(index_tensor_list)
         segmap_ = torch.sum(segmap,0,keepdim=True)
         return segmap_
     def __len__(self):
-        return len(self.all_seq)//self.opt.batchSize * self.opt.batchSize
+        if self.smapling_traning = False: # this time our seqs are fixed, len = granularity * videos
+            return len(self.all_seq)//self.opt.batchSize * self.opt.batchSize
+        else:
+            pass
+            # TODO remain to update
+
 
 
 class pair_dataset(data.Dataset):
@@ -299,9 +316,3 @@ class colordataset(data.Dataset):
 
     def __len__(self):
         return len(self.dir) // self.opt.batchSize * self.opt.batchSize
-
-
-
-
-
-

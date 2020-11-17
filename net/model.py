@@ -98,7 +98,7 @@ class model_wrapper(nn.Module):
         pass
 # ******************************************** don't touch here ***********************************************
 
-# color to sketch
+# color to wireframe
 class colortosketch(model_wrapper):
     def __init__(self):
         super(colortosketch, self).__init__()
@@ -161,7 +161,7 @@ class colortosketch(model_wrapper):
     def update_learning_rate(self,epoch):
         lr = self.opt.learningrate * (0.1 ** (epoch // 10))
         for param_group in self.optimizer_D.param_groups:
-         param_group['lr'] = lr
+            param_group['lr'] = lr
         for param_group in self.optimizer_G.param_groups:
             param_group['lr'] = lr
         print('the current decay(not include the fixed rate epoch)_%s learning rate is %s'%(epoch,lr))
@@ -181,7 +181,7 @@ class colortosketch(model_wrapper):
             generated = self.netG(input_image)
 
         return generated
-# color to sketch
+# color to wireframe
 
 # ********************* main model ******************************************
 class SCAR(model_wrapper):
@@ -253,7 +253,7 @@ class SCAR(model_wrapper):
         self.save_network(self.netD, 'D', which_epoch, self.opt.gpu_ids)
         self.save_network(self.netE, 'E', which_epoch, self.opt.gpu_ids)
         self.save_network(self.netD_seq, 'D_seq', which_epoch, self.opt.gpu_ids)
-# *******************************some init function ******************************************* #
+    # *******************************some init function ******************************************* #
 
     def forward(self,input,mode='pair'):
         if mode == 'pair':
@@ -280,7 +280,7 @@ class SCAR(model_wrapper):
             assert input['segmaps'] is not None, 'if use wrt_position degree please return a single segmap list'
             segmaps = [segmap.to(self.device) for segmap in input['segmaps']]
             degree = self.caculate_degree(difference,segmaps)
-            input_list.append(degree)
+            input_list.append(degree.detach()) # check if this affect the backward
         else:
             degree = None
         if self.opt.use_instance:
@@ -303,11 +303,11 @@ class SCAR(model_wrapper):
 
         return {
             'current':current, # tensor
-            'last':last, # tensor 
-            'next':next, # tensor 
-            'label':label, # tensor 
-            'difference':difference, # tensor 
-            'instance': instance, # tensor 
+            'last':last, # tensor
+            'next':next, # tensor
+            'label':label, # tensor
+            'difference':difference, # tensor
+            'instance': instance, # tensor
             'degree':degree, # tensor
             'wire_frame':wire_frame, # tensor
             'Encoder_input': Encoder_input, #tensor
@@ -346,7 +346,9 @@ class SCAR(model_wrapper):
                 # else the current will be replace by the fake_next_frame, which mean the previous fake_next_frame
                 # is the next 'real'_current_frame
                 loss, fake_next = self.pair_optimize(each_frame)
-            # reload the list for compute the loss
+
+            # reload the list for compute the seq D loss
+            # this is depend on how much past frames you want to pass to the D_seq
             if j < self.opt.n_past_frames:
                 fake_frames[j] = fake_next
                 cat_fakes = torch.cat(fake_frames, 1)
@@ -370,18 +372,18 @@ class SCAR(model_wrapper):
         # combine the loss
         loss_dict = {'G_loss': 0,
                      'D_loss': 0
-                    
+
                      }
         for _ in acc_loss:  # all the pair loss are inside
             loss_dict['G_loss'] += _['G_loss']
             loss_dict['D_loss'] += _['D_loss']
         # combine the loss
         if self.opt.save_result:
-          result_label = str(time.time())
-          folder = './result/result_preview/' + result_label
-          os.mkdir(folder)
-          for k,save in enumerate(fake_frames,start=0):
-            fast_check_result.imsave(save[-1,:,:,:],index=str(k),dir=folder+'/')
+            result_label = str(time.time())
+            folder = './result/result_preview/' + result_label
+            os.mkdir(folder)
+            for k,save in enumerate(fake_frames,start=0):
+                fast_check_result.imsave(save[-1,:,:,:],index=str(k),dir=folder+'/')
 
         return loss_dict,fake_frames
 
@@ -397,6 +399,8 @@ class SCAR(model_wrapper):
         raw_cat_real = input_['cat_list']
         raw_cat_fake = input_['cat_list']
         # replace the fake / real next
+
+        # TODO figure out why the D_loss is same every time, so far the code is ok i think
         raw_cat_real += [input_['next']]
         raw_cat_fake += [fake_next]
         cat_fake = torch.cat(raw_cat_fake,1)
@@ -406,6 +410,10 @@ class SCAR(model_wrapper):
         # caculate the loss
         D_loss = (self.GANloss(dis_real,True) + self.GANloss(dis_fake,False)) * 0.5
         dis_fake_ = self.netD(cat_fake)
+        # TODO figure out why the D_loss is same every time, so far the code is ok i think.
+        # One reason i guess because the one of the part of the fake image  = real current + fake change,
+        # so actually the fake very very closed to the real image..
+
         GAN_Loss = self.GANloss(dis_fake_,True) * self.opt.GAN_lambda
         L1_Loss = self.l1loss(input_['next'],fake_next) * self.opt.l1_lambda
         TV_Loss = self.TVloss(fake_next)
@@ -424,10 +432,10 @@ class SCAR(model_wrapper):
             #         fast_check_result.imsave(input_['degree'][-1, k, :, :], index=result_label + 'degree' + str(k),dir='./result/result_preview/')
 
         return {
-            'G_loss':G_Loss,
-            'D_loss':D_loss,
-             'KLd_loss':KLD_Loss
-        },fake_next
+                   'G_loss':G_Loss,
+                   'D_loss':D_loss,
+                   'KLd_loss':KLD_Loss
+               },fake_next
     def encode_z(self, x):
         mu, logvar = self.netE(x)
         z = self.reparameterize(mu, logvar)
@@ -453,19 +461,22 @@ class SCAR(model_wrapper):
         #  but don't know why SPADE's pre-process not working
         difference_ = torch.sum(difference,1,keepdim=True) # merge the difference CH
         empty = torch.zeros(self.opt.batchSize, 1, self.opt.input_size, self.opt.input_size).to(self.device) # if no tensor at a degree, fill a zero
-        degree_list = [self.opt.zero_degree] # the least degree0 is less than 1%
+        degree_list = [self.opt.zero_degree] # the least degree0 is less than 1% or 3%
         one_hot_list = [[empty]] #the first empty one
         for i in range(1,self.opt.granularity+1): # we already have zero-0.01
-            degree_list.append((0.99/self.opt.granularity)*i)
+            degree_list.append(((1-self.opt.zero_degree)/self.opt.granularity)*i)
             one_hot_list.append([empty]) # this is for later we merge the all single_segmap in 1 degree list
 
         for single_segmap in segmap_list:
             field = single_segmap[difference_ != 0]
             percentage = len(field.nonzero())/len(single_segmap.nonzero())
-            for degree,_ in enumerate(degree_list,start=0):
-                if percentage <= _:
-                    one_hot_list[degree].append(single_segmap) # degreeN is list, append that tensor
-                    break
+            if percentage>degree_list[-1]: # if greater than the maxmium degree, append it to the max
+                one_hot_list[-1].append(single_segmap)
+            else:
+                for degree,_ in enumerate(degree_list,start=0):
+                    if percentage <= _: #otherwise base on which degree you are at
+                        one_hot_list[degree].append(single_segmap) # degreeN is list, append that tensor
+                        break
         cat_list = []
         for each_degree in one_hot_list:
             merge = torch.cat(each_degree,dim=1)
@@ -473,30 +484,30 @@ class SCAR(model_wrapper):
             cat_list += [_]
         return torch.cat(cat_list,dim=1) # the shape should be match to granularity + 1(one is the zeros)
     def make_random_degree(self,segmap_list):
-      """
-      we don't need difference, just make randomly put the segmap in different degree
-      """
-      # self.opt.granularity+1
-      segmaps = [segmap.to(self.device) for segmap in segmap_list]
+        """
+        we don't need difference, just make randomly put the segmap in different degree
+        """
+        # self.opt.granularity+1
+        segmaps = [segmap.to(self.device) for segmap in segmap_list]
 
-      empty = torch.zeros(self.opt.batchSize, 1, self.opt.input_size, self.opt.input_size).to(self.device) # if no tensor at a degree, fill a zero
-      one_hot_list = []
-      for i in range(self.opt.granularity+1):
-        one_hot_list.append([empty]) # fill all the slot first
-      # random number random index random degree
-      import random
-      while len(segmaps)!=0:
-        num = random.randint(0,len(segmaps)) # how many segmap will go to the below degree
-        degree = random.randint(0,self.opt.granularity)
-        for j in range(num):
-          index = random.randint(0,len(segmaps)-1) # because we used pop, so the length will change
-          one_hot_list[degree].append(segmaps.pop(index))
-      cat_list = []
-      for each_degree in one_hot_list:
-        _ = torch.cat(each_degree,dim=1)
-        merge = torch.sum(_,1,keepdim=True) # we merge all the segmap in one degree
-        cat_list += [merge]
-      return torch.cat(cat_list,dim=1)
+        empty = torch.zeros(self.opt.batchSize, 1, self.opt.input_size, self.opt.input_size).to(self.device) # if no tensor at a degree, fill a zero
+        one_hot_list = []
+        for i in range(self.opt.granularity+1):
+            one_hot_list.append([empty]) # fill all the slot first
+        # random number random index random degree
+        import random
+        while len(segmaps)!=0:
+            num = random.randint(0,len(segmaps)) # how many segmap will go to the below degree
+            degree = random.randint(0,self.opt.granularity)
+            for j in range(num):
+                index = random.randint(0,len(segmaps)-1) # because we used pop, so the length will change
+                one_hot_list[degree].append(segmaps.pop(index))
+        cat_list = []
+        for each_degree in one_hot_list:
+            _ = torch.cat(each_degree,dim=1)
+            merge = torch.sum(_,1,keepdim=True) # we merge all the segmap in one degree
+            cat_list += [merge]
+        return torch.cat(cat_list,dim=1)
     def pre_process_input_(self,input):
         current = input['current'].to(self.device)
         last = input['last'].to(self.device)
@@ -552,62 +563,62 @@ class SCAR(model_wrapper):
             'cat_list':cat_list
         }
     def test(self,input):
-      # self.netE = net.generator.Encoder2(self.opt).to(self.device)
-      # pretrain_path = self.save_dir
-      # self.load_network(self.netE, 'E', self.opt.which_epoch, pretrain_path)
-      # self.KLDloss = net.loss.KLDLoss()
-      with torch.no_grad():
-        input_ = self.pre_process_input_(input)
-        # fake,weight,KLD_Loss = self.generate_next_frame(input_['Encoder_input'],input_['Decoder_input'])
-        fake,weight = self.netG(input_['Decoder_input'],None)
-        print(input_['Decoder_input'].shape)
-        if not self.opt.use_raw_only:
-            fake_next = fake*weight + (1-weight) * input_['current']
-        else:
-            fake_next = fake
+        # self.netE = net.generator.Encoder2(self.opt).to(self.device)
+        # pretrain_path = self.save_dir
+        # self.load_network(self.netE, 'E', self.opt.which_epoch, pretrain_path)
+        # self.KLDloss = net.loss.KLDLoss()
+        with torch.no_grad():
+            input_ = self.pre_process_input_(input)
+            # fake,weight,KLD_Loss = self.generate_next_frame(input_['Encoder_input'],input_['Decoder_input'])
+            fake,weight = self.netG(input_['Decoder_input'],None)
+            print(input_['Decoder_input'].shape)
+            if not self.opt.use_raw_only:
+                fake_next = fake*weight + (1-weight) * input_['current']
+            else:
+                fake_next = fake
 
-      return fake_next
+        return fake_next
 
     def inference(self,input,segmap_list,times=30):
-      with torch.no_grad():
-        fake_frames = []
-        current = input['current'].to(self.device)
-        last = input['last'].to(self.device)
-        fixed_input = [last]
-        if self.opt.use_label:
-          label = input['label'].to(self.device)
-          fixed_input.append(label)
-          if self.opt.use_instance:
-            instance = self.get_edges(label).to(self.device)
-            fixed_input.append(instance)
-        if self.opt.use_wireframe:
-          wire_frame = input['wire_frame'].to(self.device)
-          fixed_input.append(instance)
-      # current and degree will refresh every time, the last and segmap and wireframe is fixed
+        with torch.no_grad():
+            fake_frames = []
+            current = input['current'].to(self.device)
+            last = input['last'].to(self.device)
+            fixed_input = [last]
+            if self.opt.use_label:
+                label = input['label'].to(self.device)
+                fixed_input.append(label)
+                if self.opt.use_instance:
+                    instance = self.get_edges(label).to(self.device)
+                    fixed_input.append(instance)
+            if self.opt.use_wireframe:
+                wire_frame = input['wire_frame'].to(self.device)
+                fixed_input.append(instance)
+            # current and degree will refresh every time, the last and segmap and wireframe is fixed
 
-        for i in range(times):
-          random_degree = None # just make sure everytime is the new one.. actually should't need it
-          dynamic_input = None
-          random_degree = self.make_random_degree(segmap_list) if self.opt.use_degree else None
-          dynamic_input = fixed_input + [current,random_degree] if self.opt.use_degree else fixed_input + [current]
-          cat_feature = torch.cat(dynamic_input,dim=1)
-          fake,weight = self.netG(cat_feature,None)
-          if not self.opt.use_raw_only:
-              fake_next = fake*weight + (1-weight) * current
-          else:
-              fake_next = fake
-          fake_frames.append(fake_next)
-          # imsave(fake_next[-1,:,:,:],index = 'fake'+str(i),dir = './result/result_preview/')
-          # imsave(current[-1,:,:,:],index = 'current'+str(i),dir = './result/result_preview/')
-          # imsave(label[-1,:,:,:],index = 'label'+str(i),dir = './result/result_preview/')
-          # imsave(last[-1,:,:,:],index = 'last'+str(i),dir = './result/result_preview/')
+            for i in range(times):
+                random_degree = None # just make sure everytime is the new one.. actually should't need it
+                dynamic_input = None
+                random_degree = self.make_random_degree(segmap_list) if self.opt.use_degree else None
+                dynamic_input = fixed_input + [current,random_degree] if self.opt.use_degree else fixed_input + [current]
+                cat_feature = torch.cat(dynamic_input,dim=1)
+                fake,weight = self.netG(cat_feature,None)
+                if not self.opt.use_raw_only:
+                    fake_next = fake*weight + (1-weight) * current
+                else:
+                    fake_next = fake
+                fake_frames.append(fake_next)
+                # imsave(fake_next[-1,:,:,:],index = 'fake'+str(i),dir = './result/result_preview/')
+                # imsave(current[-1,:,:,:],index = 'current'+str(i),dir = './result/result_preview/')
+                # imsave(label[-1,:,:,:],index = 'label'+str(i),dir = './result/result_preview/')
+                # imsave(last[-1,:,:,:],index = 'last'+str(i),dir = './result/result_preview/')
 
-          # for j in range(random_degree.size(1)):
-          #   imsave(random_degree[-1,j,:,:],index = 'degree'+str(i) + '_' + str(j) , dir = './result/result_preview/')
+                # for j in range(random_degree.size(1)):
+                #   imsave(random_degree[-1,j,:,:],index = 'degree'+str(i) + '_' + str(j) , dir = './result/result_preview/')
 
-          current = fake_next
-          
-        return fake_frames
+                current = fake_next
+
+            return fake_frames
 
 from utils.fast_check_result import imsave
 # this is for inference mode... should update in the future
@@ -622,6 +633,3 @@ IMG_EXTENSIONS = [
 
 def is_image_file(filename):
     return any(filename.endswith(extension) for extension in IMG_EXTENSIONS)
-# this is for inference mode...
-
-

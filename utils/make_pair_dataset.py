@@ -13,11 +13,11 @@ def is_image_file(filename):
     return any(filename.endswith(extension) for extension in IMG_EXTENSIONS)
 
 def get_image_floders(root):
-   return [os.path.join(root,folder) for folder in os.listdir(root)]
+    return [os.path.join(root,folder) for folder in os.listdir(root)]
 
 
 # TODO: def this from utils fast_check_result in the future
-unloader = transforms.ToPILImage()  
+unloader = transforms.ToPILImage()
 def imsave(tensor,dir):
     image = unloader(tensor)
     image.save(dir)
@@ -34,13 +34,13 @@ def get_all_image(folders):
     for folder in folders: # all images folders
         temp = []
         if not '.DS_Store' in folder:
-          for image in os.listdir(folder):
-              if is_image_file(image):
-                  temp.append(os.path.join(folder,image))
-              elif 'seg' in image:
-                  segmap_path = os.path.join(folder,image)
-          temp = [temp]
-          images += temp
+            for image in os.listdir(folder):
+                if is_image_file(image):
+                    temp.append(os.path.join(folder,image))
+                elif 'seg' in image:
+                    segmap_path = os.path.join(folder,image)
+            temp = [temp]
+            images += temp
     return images
 
 
@@ -61,17 +61,17 @@ def make_pair_dataset(dataset_dir,step=3):
             # pair/00001/grani1/pair0to1 pair0to2
 
             granularity_folder = os.path.join(pair_name,  'granularity' + str(step_))
-            print(granularity_folder)
+
             if not os.path.isdir(granularity_folder):
-              os.mkdir(granularity_folder)
+                os.mkdir(granularity_folder)
 
             next_step = step_
             index = i + next_step if i < (len(image_folder)-next_step) else -1
             index_ = index if index is not -1 else len(image_folder)
             folder = os.path.join(granularity_folder,str(mark) + 'pair' + str(i) + 'to' + str(index_))
             # print(folder)
-                # the format will be '_00010 pair i to(i+step)'
-                # i means the current j means the next
+            # the format will be '_00010 pair i to(i+step)'
+            # i means the current j means the next
             if not os.path.isdir(folder):
                 os.mkdir(folder)
                 shutil.copy(image_folder[i],os.path.join(folder,str(mark)+'current.jpg'))
@@ -86,9 +86,9 @@ def make_pair_dataset(dataset_dir,step=3):
 
     print('Done')
 def make_pair_dataset_in_granularity(dataset_dir,granularity_list):
-  for granularity in granularity_list:
-    make_pair_dataset(dataset_dir,granularity)
-  
-granularity_list = [1,3,5,10,12]
-make_pair_dataset('/content/scar/dataset/pair',step=10)
+    for granularity in granularity_list:
+        make_pair_dataset(dataset_dir,granularity)
 
+granularity_list = [1,3,5,10,12]
+make_pair_dataset_in_granularity('/content/scar/dataset/pair',granularity_list)
+# TODO use pool to do that, its too slow
