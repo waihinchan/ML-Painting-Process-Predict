@@ -205,6 +205,7 @@ class pair_dataset(data.Dataset):
                 if 'pair' in dir:
                     all_pairs.append(os.path.join(root, dir))
         self.all_pairs = all_pairs
+        print(self.all_pairs)
         self.all_pairs.sort(key=lambda x: int(re.match('(\d+)', x.split('/')[-1].split('pair')[-1]).group(1)))
 
 
@@ -216,8 +217,8 @@ class pair_dataset(data.Dataset):
         pair_paths = sorted(pair_paths)
         frames = [Image.open(img) for img in pair_paths if is_image_file(img) and not 'label' in img and not 'single' in img]
         # ************************* all the pair folder ************************* #
-
-        segmap_folder = os.path.dirname(os.path.dirname(pair_paths[0])) + '/segmap' if self.opt.use_label else None # TODO remake the dataset name in the future
+        parent = os.path.dirname(os.path.dirname(os.path.dirname(pair_paths[0])))
+        segmap_folder = parent + '/segmap' if self.opt.use_label else None # TODO remake the dataset name in the future
         # ************************* the segmaps folder ************************* #
 
         if self.opt.use_label:

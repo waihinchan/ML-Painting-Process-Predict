@@ -53,15 +53,23 @@ def make_pair_dataset(dataset_dir,step=3):
     for image_folder in all_images:
         image_folder.sort() #sort that single image index
         step_ =  step
-        granularity_folder = 
-        if not os.path.isdir(folder):
+        granularity_folder = None
+        # if not os.path.isdir(folder):
         for i in range(0,len(image_folder),step_):
-            pair_name = os.path.dirname(image_folder[i])
-            mark = pair_name.split('/')[-1]
+            pair_name = os.path.dirname(image_folder[i]) # root
+            mark = pair_name.split('/')[-1] # which folder
+            # pair/00001/grani1/pair0to1 pair0to2
+
+            granularity_folder = os.path.join(pair_name,  'granularity' + str(step_))
+            print(granularity_folder)
+            if not os.path.isdir(granularity_folder):
+              os.mkdir(granularity_folder)
+
             next_step = step_
             index = i + next_step if i < (len(image_folder)-next_step) else -1
             index_ = index if index is not -1 else len(image_folder)
-            folder = os.path.join(pair_name, str(mark) + 'pair' + str(i) + 'to' + str(index_))
+            folder = os.path.join(granularity_folder,str(mark) + 'pair' + str(i) + 'to' + str(index_))
+            # print(folder)
                 # the format will be '_00010 pair i to(i+step)'
                 # i means the current j means the next
             if not os.path.isdir(folder):
@@ -79,7 +87,8 @@ def make_pair_dataset(dataset_dir,step=3):
     print('Done')
 def make_pair_dataset_in_granularity(dataset_dir,granularity_list):
   for granularity in granularity_list:
-    make_pair_dataset(dataset_dir,granularity).
-
+    make_pair_dataset(dataset_dir,granularity)
+  
+granularity_list = [1,3,5,10,12]
 make_pair_dataset('/content/scar/dataset/pair',step=10)
 
