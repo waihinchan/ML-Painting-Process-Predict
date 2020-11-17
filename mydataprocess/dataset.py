@@ -113,14 +113,12 @@ class seq_dataset(data.Dataset):
         # this for storage all the video folder (each folder has many frames)
         self.all_folder = [os.path.join(self.path,video) for video in os.listdir(self.path) if os.path.isdir(os.path.join(self.path,video))]
         self.all_folder.sort() # sort the video index
-        self.all_seq = [ [os.path.join(folder,granularity) for granularity in os.listdir(folder) if 'granularity' in granularity and os.path.isdir(os.path.join(self.path,video))] for folder in self.all_folder]
-        # same like:
-        # for folder in self.all_folder:
-        # for granularity in os.listdir(folder):
-        # if balbalbala
+        self.all_seq = []
+        for folder in self.all_folder:
+          self.all_seq += [ os.path.join(folder,granularity) for granularity in os.listdir(folder) if 'granularity' in granularity and os.path.isdir(os.path.join(folder,granularity))] 
 
         # we will iter and sort the sub folder when __getitem__
-        self.all_seq.sort(key=lambda x: int(re.match('(\d+)', x.split('/')[-1].split('pair')[-1]).group(1))) # TODO remain to be test
+        # self.all_seq.sort(key=lambda x: int(re.match('(\d+)', x.split('/')[-1].split('pair')[-1]).group(1))) # TODO remain to be test
         # we actually have different granularity, so actually it's like granularity1,granularity1,granularity1,granularity2,granularity2,granularity2 or what..
     def get_one_pairs(self,path):# this will return a single dict, same like the pair dataset
 
@@ -130,13 +128,14 @@ class seq_dataset(data.Dataset):
         pair_paths = sorted(pair_paths)
         frames = [Image.open(img) for img in pair_paths if is_image_file(img) and not 'label' in img and not 'single' in img]
         # ************************* all the pair folder ************************* #
-        segmap_folder = os.path.dirname(os.path.dirname(pair_paths[0])) + '/segmap'  # not sure if this still working
+        parent = os.path.dirname(os.path.dirname(os.path.dirname(pair_paths[0])))
+        segmap_folder = parent + '/segmap'  # not sure if this still working
 
         # ************************* the segmaps folder ************************* #
 
         if self.opt.use_label:
             segmap_path = [Image.open(img) for img in pair_paths if is_image_file(img) and 'single' in img]
-            # in case of if we specify a certain label map, generally are different parts of the full segmap
+                        # in case of if we specify a certain label map, generally are different parts of the full segmap
             full_segmap = [Image.open(os.path.join(segmap_folder, img)) for img in os.listdir(segmap_folder) if is_image_file(img) and not 'singlesegmap' in img]
             # if didn't specify a certain label map. the dataset will return the full segmap
         # ************************* get the label map ************************* #
@@ -181,6 +180,7 @@ class seq_dataset(data.Dataset):
     def __getitem__(self, index,smapling_traning = False): # this will return a list consist of many dict
         if not smapling_traning:
             video = self.all_seq[index]
+            print(video)
             all_pairs = [os.path.join(video,pair) for pair in os.listdir(video) if 'pair' in pair]
             # all_pairs.sort(key=lambda x: int(re.match('(\d+)', x.split('/')[-1].split('pair')[-1]).group(1)))
             all_pairs.sort(key=lambda x: int(re.match('(\d+)', x.split('/')[-1].split('pair')[-1].split('to')[0]).group(1))) # sort the pairs again as we want it in seq
@@ -199,7 +199,7 @@ class seq_dataset(data.Dataset):
         segmap_ = torch.sum(segmap,0,keepdim=True)
         return segmap_
     def __len__(self):
-        if self.smapling_traning = False: # this time our seqs are fixed, len = granularity * videos
+        if self.opt.smapling_traning == False: # this time our seqs are fixed, len = granularity * videos
             return len(self.all_seq)//self.opt.batchSize * self.opt.batchSize
         else:
             pass
