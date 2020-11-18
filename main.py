@@ -12,16 +12,19 @@ myoption.name = 'pair'
 myoption.use_degree = 'wrt_position'
 myoption.use_label= True
 myoption.mode = 'continue train'
-myoption.which_epoch = 200
+myoption.which_epoch = 100
 myoption.forward = 'seq'
+myoption.Kld_lambda = myoption.Kld_lambda if myoption.mode == 'train' else (1.1**myoption.which_epoch)*myoption.Kld_lambda
+myoption.learningrate = myoption.learningrate if myoption.mode == 'train' and myoption.which_epoch<myoption.niter_decay else myoption.opt.learningrate * (0.9 ** ( (myoption.which_epoch-myoption.niter_decay) // 10))
+
 for name,value in vars(myoption).items():
     print('%s=%s' % (name,value))
 dataloader = mydataloader.Dataloader(myoption)
 pair_data = dataloader.load_data()
 mymodel = net.model.SCAR()
 mymodel.initialize(opt = myoption)
-# start_epoch = 1 if myoption.mode == 'train' else myoption.which_epoch
-start_epoch = 1 
+start_epoch = 1 if myoption.mode == 'train' else myoption.which_epoch
+# start_epoch = 1 
 print('start to train')
 for i in range(start_epoch,mymodel.opt.epoch):
     epoch_start_time = time.time()

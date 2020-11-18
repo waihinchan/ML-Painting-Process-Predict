@@ -54,10 +54,12 @@ class opt():
         self.forward = 'pair' # pair or seq, and also seq has two option, see below
         self.z_dim = 256 # for the VAE
 
+
+        # TBD here
         # this 2 is for seq smapling training
         self.smapling_traning = False
         self.max_time_step = 50 # encourage the model finished a painting in X time step
-
+        # TBD here
 
 
 

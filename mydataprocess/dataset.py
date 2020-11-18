@@ -130,7 +130,6 @@ class seq_dataset(data.Dataset):
         # ************************* all the pair folder ************************* #
         parent = os.path.dirname(os.path.dirname(os.path.dirname(pair_paths[0])))
         segmap_folder = parent + '/segmap'  
-
         # ************************* the segmaps folder ************************* #
 
         if self.opt.use_label:

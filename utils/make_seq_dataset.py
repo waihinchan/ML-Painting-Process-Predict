@@ -95,21 +95,28 @@ def make_seq_dataset(dataset_root,max_frame = 25):
   paths = get_folders(dataset_root) # this is all the granularity paths
   for data in paths: 
     pairs = get_pairs(data) # get all the pair inside
+    print( 'current pairs length')
+    print(len(pairs))
     if len(pairs)>max_frame:
       pairs.sort(key=lambda x: int(re.match('(\d+)', x.split('/')[-1].split('pair')[-1].split('to')[0]).group(1)))
       # get the pair folder name, get the index before or after the 'to' then sort it
-      cut = len(pairs)// max_frame
-      for i in range(1,cut): 
-        cut_list = pairs[i*cut:(i+1)*cut] if (i+1)*cut<=len(pairs) else pairs[i*cut:-1]
+      cut = max_frame
+      # print(cut)
+      for i in range(cut,len(pairs),cut): 
+        cut_list = pairs[i:i+cut] if i+ cut<=len(pairs) else pairs[i:-1]
         parent = os.path.dirname(cut_list[0]) #  root/video_index/granularityN
-        dest = parent+'_'+str((i+1)*cut)
+        dest = parent+'_'+str((i))
         if not os.path.isdir(dest):
+          print(dest)
           os.mkdir(dest) # root/video_index/granularityN_{1,2,3,4..}
         for _ in cut_list:
-          shutil.move(_, dest) 
-          #move all the pair to dest, so will like root/video_index/granularityN_{1,2,3,4..}/pair{NtoN}
-          
+          # break
+          print(_)
+          shutil.move(_, dest)
 
+          #move all the pair to dest, so will like root/video_index/granularityN_{1,2,3,4..}/pair{NtoN}
+
+make_seq_dataset('../dataset/pair')
 
 
 

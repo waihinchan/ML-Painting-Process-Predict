@@ -242,7 +242,7 @@ class SCAR(model_wrapper):
         else:
             print('mode error,this sitaution will create a empty netG without any way pretrain params')
     def update_learning_rate(self,epoch):
-        lr = self.opt.learningrate * (0.1 ** (epoch // 10))
+        lr = self.opt.learningrate * (0.9 ** (epoch // 10))
         for param_group in self.optimizer_D.param_groups:
             param_group['lr'] = lr
         for param_group in self.optimizer_G.param_groups:
