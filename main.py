@@ -12,10 +12,10 @@ myoption.name = 'pair'
 myoption.use_degree = 'wrt_position'
 myoption.use_label= True
 myoption.mode = 'continue train'
-myoption.which_epoch = 100
-myoption.forward = 'seq'
-myoption.Kld_lambda = myoption.Kld_lambda if myoption.mode == 'train' else (1.1**myoption.which_epoch)*myoption.Kld_lambda
-myoption.learningrate = myoption.learningrate if myoption.mode == 'train' and myoption.which_epoch<myoption.niter_decay else myoption.opt.learningrate * (0.9 ** ( (myoption.which_epoch-myoption.niter_decay) // 10))
+myoption.which_epoch = 250
+myoption.forward = 'pair'
+myoption.Kld_lambda = myoption.Kld_lambda if myoption.mode == 'train' else (1.1**(myoption.which_epoch//20))*myoption.Kld_lambda
+myoption.learningrate = myoption.learningrate if myoption.mode == 'train' and myoption.which_epoch<myoption.niter_decay else myoption.learningrate * (0.9 ** ( (myoption.which_epoch-myoption.niter_decay) // 10))
 
 for name,value in vars(myoption).items():
     print('%s=%s' % (name,value))
@@ -56,8 +56,10 @@ for i in range(start_epoch,mymodel.opt.epoch):
     if i % 5 == 1:
         print('epoch%s last loss is %s' % (i, loss))
         mymodel.opt.save_result = False
-        mymodel.opt.Kld_lambda =  mymodel.opt.Kld_lambda + mymodel.opt.Kld_lambda * 0.1
         print('current kld lambda is %s' %  mymodel.opt.Kld_lambda)
+    if i%20 == 0:
+        mymodel.opt.Kld_lambda =  mymodel.opt.Kld_lambda + mymodel.opt.Kld_lambda * 0.1
+
     if i % 50 == 0:
         mymodel.save(i)
         print('save %s_epoch' % i)

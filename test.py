@@ -12,7 +12,7 @@ myoption.use_degree = 'wrt_position'
 myoption.use_label= True
 myoption.shuffle = False
 myoption.mode = 'test'
-myoption.which_epoch = 200
+myoption.which_epoch = 350
 myoption.forward = 'pair'
 for name,value in vars(myoption).items():
     print('%s=%s' % (name,value))
@@ -22,7 +22,7 @@ print(mymodel)
 # # *******************single test******************* 
 import os
 from mydataprocess.dataset import is_image_file
-index = '_00001'
+index = '_00017'
 path = '/content/scar/dataset/pair/' + index
 image_paths = [os.path.join(path,image) for image in os.listdir(path) if is_image_file(image) ]
 image_paths.sort()

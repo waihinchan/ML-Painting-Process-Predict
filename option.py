@@ -7,8 +7,8 @@ cpu_num = multiprocessing.cpu_count()
 class opt():
     def __init__(self):
         self.learningrate = 0.0002
-        self.epoch = 202
-        self.niter_decay = 100
+        self.epoch = 602
+        self.niter_decay = 200
         self.lsgan = True
         self.mode = "train"
         self.input_chan = 3

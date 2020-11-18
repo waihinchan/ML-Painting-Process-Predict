@@ -89,6 +89,6 @@ def make_pair_dataset_in_granularity(dataset_dir,granularity_list):
     for granularity in granularity_list:
         make_pair_dataset(dataset_dir,granularity)
 
-granularity_list = [1,3,5]
+granularity_list = [5]
 make_pair_dataset_in_granularity('/content/scar/dataset/pair',granularity_list)
 # TODO use pool to do that, its too slow
