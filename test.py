@@ -12,7 +12,7 @@ myoption.use_degree = 'wrt_position'
 myoption.use_label= True
 myoption.shuffle = False
 myoption.mode = 'test'
-myoption.which_epoch = 350
+myoption.which_epoch = 600
 myoption.forward = 'pair'
 for name,value in vars(myoption).items():
     print('%s=%s' % (name,value))
@@ -22,48 +22,50 @@ print(mymodel)
 # # *******************single test******************* 
 import os
 from mydataprocess.dataset import is_image_file
-index = '_00017'
-path = '/content/scar/dataset/pair/' + index
-image_paths = [os.path.join(path,image) for image in os.listdir(path) if is_image_file(image) ]
-image_paths.sort()
+index_list = ['_00000','_00008','_00017','_00018','_00005']
+for index in index_list:
+  # index = '_00005'
+  path = '/content/scar/dataset/pair/' + index
+  image_paths = [os.path.join(path,image) for image in os.listdir(path) if is_image_file(image) ]
+  image_paths.sort()
 
-segmap_folder = path + '/segmap'
-for _ in os.listdir(segmap_folder):
-  if not 'single' in _ and 'segmap' in _:
-    label_path = os.path.join(segmap_folder,_)
-    break
-one_hot_paths = [ os.path.join(segmap_folder,one_hot) for one_hot in os.listdir(segmap_folder) if not 'segmap' in one_hot and 'label' in one_hot ]
+  segmap_folder = path + '/segmap'
+  for _ in os.listdir(segmap_folder):
+    if not 'single' in _ and 'segmap' in _:
+      label_path = os.path.join(segmap_folder,_)
+      break
+  one_hot_paths = [ os.path.join(segmap_folder,one_hot) for one_hot in os.listdir(segmap_folder) if not 'segmap' in one_hot and 'label' in one_hot ]
 
-from utils.fast_check_result import grabdata
-num = 0
-current = grabdata(image_paths[num],myoption)
-next_f = grabdata(image_paths[num+1],myoption)
-last = grabdata(image_paths[-1],myoption)
-label = grabdata(label_path,myoption)
-# print(image_paths[0])
-# print(image_paths[-1])
-# print(label_path)
-for _ in one_hot_paths:
-  print(_)
+  from utils.fast_check_result import grabdata
+  num = 0
+  current = grabdata(image_paths[num],myoption)
+  last = grabdata(image_paths[-1],myoption)
+  label = grabdata(label_path,myoption)
+  # print(image_paths[0])
+  # print(image_paths[-1])
+  # print(label_path)
+  for _ in one_hot_paths:
+    print(_)
 
-from utils.fast_check_result import imsave
-one_hot_list = [grabdata(one_hot,myoption) for one_hot in one_hot_paths] if myoption.use_degree is not None else None
-data = {
-  'current':current,
-  'next':current,
-  'last':last,
-  'label':label,
-  'difference':current,
-  'segmaps':one_hot_list
-}
+  from utils.fast_check_result import imsave
+  one_hot_list = [grabdata(one_hot,myoption) for one_hot in one_hot_paths] if myoption.use_degree is not None else None
+  data = {
+    'current':current,
+    'next':current,
+    'last':last,
+    'label':label,
+    'difference':current,
+    'segmaps':one_hot_list
+  }
 
- # save 10 groups of different random degree result
-fake_frames = mymodel.inference(data,100)
-if not os.path.isdir('./result/result_preview/' + 'frames'+str(20)):
-  os.mkdir('./result/result_preview/' + 'frames'+str(20))
-for j,fake_frame in enumerate(fake_frames,start=0):
-  imsave(fake_frame,index = str(j),dir = './result/result_preview/' + 'frames'+str(20) + '/')
-  imsave(current,index = 'current',dir = './result/result_preview/'+ 'frames'+str(20) + '/')
+  # save 10 groups of different random degree result
+  frames = 200
+  fake_frames = mymodel.inference(data,frames)
+  if not os.path.isdir('./result/result_preview/' + str(index)+ 'frames'+str(frames)):
+    os.mkdir('./result/result_preview/' + str(index) + 'frames'+str(frames))
+  for j,fake_frame in enumerate(fake_frames,start=0):
+    imsave(fake_frame,index = str(j),dir = './result/result_preview/' + str(index) + 'frames'+str(frames)+ '/')
+    imsave(current,index = 'current',dir = './result/result_preview/'+ str(index) + 'frames'+str(frames) + '/')
 
 # # *******************single test******************* 
 

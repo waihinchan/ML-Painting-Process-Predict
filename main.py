@@ -12,8 +12,8 @@ myoption.name = 'pair'
 myoption.use_degree = 'wrt_position'
 myoption.use_label= True
 myoption.mode = 'continue train'
-myoption.which_epoch = 250
-myoption.forward = 'pair'
+myoption.which_epoch = 400
+myoption.forward = 'seq'
 myoption.Kld_lambda = myoption.Kld_lambda if myoption.mode == 'train' else (1.1**(myoption.which_epoch//20))*myoption.Kld_lambda
 myoption.learningrate = myoption.learningrate if myoption.mode == 'train' and myoption.which_epoch<myoption.niter_decay else myoption.learningrate * (0.9 ** ( (myoption.which_epoch-myoption.niter_decay) // 10))
 

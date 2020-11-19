@@ -340,7 +340,8 @@ class SCAR(model_wrapper):
             # print(j) # count if the GPU memory will exceed... CRYING..
             real_past_frames[-1] = each_frame['next'].to(self.device)  # every time the real_past_frames will auto update
             if j == 0:  # if is the first time we use the raw blank_frame/1st_frame/whatever given by the dataset
-                loss, fake_next = self.pair_optimize(each_frame)
+                loss, fake_next = self.pair_optimize(each_frame,mode='seq')
+                
             else:
                 each_frame['current'] = fake_next
                 # else the current will be replace by the fake_next_frame, which mean the previous fake_next_frame
@@ -387,10 +388,15 @@ class SCAR(model_wrapper):
 
         return loss_dict,fake_frames
 
-    def pair_optimize(self, input):
-        input_ = self.pre_process_input(input)
-        # generate fake
-        fake,weight,KLD_Loss = self.generate_next_frame(input_['Encoder_input'],input_['Decoder_input'])
+    def pair_optimize(self, input,mode='pair'):
+        if mode == 'pair':
+          input_ = self.pre_process_input(input)
+          # generate fake
+          fake,weight,KLD_Loss = self.generate_next_frame(input_['Encoder_input'],input_['Decoder_input'])
+        else: # during seq the z is from random normal distribution
+          input_ = self.pre_process_input(input)
+          fake,weight = self.netG(input_['Decoder_input'],None)
+          KLD_Loss = None
         # pass to the D
         if not self.opt.use_raw_only:
             fake_next = fake*weight + (1-weight) * input_['current']
@@ -418,7 +424,8 @@ class SCAR(model_wrapper):
         L1_Loss = self.l1loss(input_['next'],fake_next) * self.opt.l1_lambda
         TV_Loss = self.TVloss(fake_next)
         VGG_Loss = self.vggloss(fake_next,input_['next']) * self.opt.Vgg_lambda
-        G_Loss = L1_Loss + VGG_Loss + GAN_Loss + KLD_Loss + TV_Loss
+        G_Loss = L1_Loss + VGG_Loss + GAN_Loss + KLD_Loss + TV_Loss if mode=='pair' else L1_Loss + VGG_Loss + GAN_Loss + TV_Loss
+        # no kld loss during seq optimization
         if self.opt.save_result:
             result_label = str(time.time())
             fast_check_result.imsave(input_['next'][-1,:,:,:],index=result_label+'real',dir='./result/result_preview/')
@@ -436,6 +443,7 @@ class SCAR(model_wrapper):
                    'D_loss':D_loss,
                    'KLd_loss':KLD_Loss
                },fake_next
+
     def encode_z(self, x):
         mu, logvar = self.netE(x)
         z = self.reparameterize(mu, logvar)
