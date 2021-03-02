@@ -6,7 +6,9 @@
 
 项目介绍见:https://creativecomputing.cci.arts.ac.uk/waihin-chan
 
-论文参考:
+实现论文:https://github.com/waihinchan/ML-Painting-Process-Predict/blob/experient/Painting%20Process%20Predict.pdf
+
+![https://github.com/waihinchan/ML-Painting-Process-Predict/blob/experient/result.gif](https://github.com/waihinchan/ML-Painting-Process-Predict/blob/experient/result.gif)
 
 
 
